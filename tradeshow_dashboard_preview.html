@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trade Show Trend Analysis Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242836;
+    --border: #2e3348;
+    --text: #e4e6f0;
+    --text-muted: #8b8fa8;
+    --accent: #6c63ff;
+    --accent-light: #8b84ff;
+    --green: #34d399;
+    --orange: #fbbf24;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --cyan: #22d3ee;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* --- Header --- */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header h1 .logo {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: white;
+    font-weight: 700;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .status-idle { background: var(--surface2); color: var(--text-muted); }
+  .status-running { background: rgba(108, 99, 255, 0.2); color: var(--accent-light); animation: pulse 2s infinite; }
+  .status-done { background: rgba(52, 211, 153, 0.2); color: var(--green); }
+  .mode-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--orange);
+    font-weight: 500;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* --- Layout --- */
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* --- Sidebar --- */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .sidebar h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    margin-top: 20px;
+  }
+  .sidebar h3:first-child { margin-top: 0; }
+
+  .control-group { margin-bottom: 16px; }
+  .control-group label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .control-group select, .control-group input[type="text"] {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .control-group select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238b8fa8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+  }
+  .control-group select:focus, .control-group input[type="text"]:focus {
+    border-color: var(--accent);
+  }
+  select option { background: var(--surface2); color: var(--text); }
+
+  .btn {
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-light); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stat-card {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-card .value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent-light);
+  }
+  .stat-card .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .history-list { display: grid; gap: 6px; }
+  .history-item {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+  .history-item .time { color: var(--text-muted); min-width: 50px; }
+  .history-item .detail { flex: 1; margin-left: 8px; color: var(--text); }
+  .history-item .signals-count { color: var(--green); font-weight: 600; font-size: 11px; }
+
+  /* --- Main Content --- */
+  .main {
+    padding: 24px 28px;
+    overflow-y: auto;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    background: none;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--accent-light);
+    border-bottom-color: var(--accent);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* --- Trend Cards --- */
+  .trends-grid { display: grid; gap: 12px; }
+  .trend-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .trend-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(108, 99, 255, 0.08);
+  }
+  .trend-card .trend-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .trend-card .trend-rank {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(108, 99, 255, 0.15);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 10px;
+  }
+  .trend-card .trend-title { font-size: 15px; font-weight: 600; flex: 1; }
+  .trend-card .trend-score {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green);
+    background: rgba(52, 211, 153, 0.1);
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+  .trend-card .trend-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .tag-emerging { background: rgba(34, 211, 238, 0.15); color: var(--cyan); }
+  .tag-growing { background: rgba(52, 211, 153, 0.15); color: var(--green); }
+  .tag-mature { background: rgba(251, 191, 36, 0.15); color: var(--orange); }
+  .tag-declining { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+  .tag-industry { background: rgba(96, 165, 250, 0.12); color: var(--blue); }
+  .tag-region { background: rgba(139, 132, 255, 0.12); color: var(--accent-light); }
+  .tag-cross { background: rgba(251, 191, 36, 0.15); color: var(--orange); }
+  .tag-global { background: rgba(34, 211, 238, 0.15); color: var(--cyan); }
+
+  .trend-card .trend-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .trend-card .trend-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .trend-card .trend-footer .keywords span {
+    display: inline-block;
+    background: var(--surface2);
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+    font-size: 10px;
+  }
+
+  /* --- Insight Cards --- */
+  .insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+  }
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    transition: border-color 0.2s;
+  }
+  .insight-card:hover { border-color: rgba(108, 99, 255, 0.4); }
+  .insight-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+  .insight-card .meta-row {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .insight-card .meta-row strong { color: var(--text); }
+  .insight-card .trend-list { margin-top: 10px; }
+  .insight-card .trend-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .insight-card .trend-list-item:last-child { border-bottom: none; }
+  .insight-card .trend-list-item .name { color: var(--text); }
+  .insight-card .trend-list-item .score { color: var(--accent-light); font-weight: 600; }
+
+  /* --- Opportunities --- */
+  .opportunity-list { display: grid; gap: 10px; }
+  .opportunity-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    transition: border-color 0.2s;
+  }
+  .opportunity-item:hover { border-color: var(--green); }
+  .opportunity-item strong { color: var(--text); }
+
+  /* --- Shows Table --- */
+  .shows-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .shows-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .shows-table th {
+    text-align: left;
+    padding: 12px 14px;
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+  }
+  .shows-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .shows-table tr:last-child td { border-bottom: none; }
+  .shows-table tr:hover td { background: rgba(108, 99, 255, 0.04); }
+  .shows-table .show-name { font-weight: 600; color: var(--text); }
+  .shows-table .show-industry { color: var(--blue); }
+
+  /* --- Responsive --- */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+    .insights-grid { grid-template-columns: 1fr; }
+    .header { padding: 12px 16px; }
+    .main { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>
+    <span class="logo">TS</span>
+    Trade Show Trend Analysis
+  </h1>
+  <div class="header-right">
+    <span class="mode-badge">Preview Mode</span>
+    <span id="statusBadge" class="status-badge status-done">Ready</span>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h3>Analysis Controls</h3>
+
+    <div class="control-group">
+      <label>Industry</label>
+      <select id="selIndustry">
+        <option value="">All Industries</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Region</label>
+      <select id="selRegion">
+        <option value="">All Regions</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Trade Show</label>
+      <input type="text" id="inputShow" placeholder="e.g. CES, MWC, GITEX...">
+    </div>
+
+    <button class="btn btn-primary" onclick="simulateRun()">
+      Run Analysis
+    </button>
+    <button class="btn btn-secondary" onclick="resetFilters()">
+      Reset Filters
+    </button>
+
+    <h3>Agent Status</h3>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="value" id="statSignals">47</div>
+        <div class="label">Signals</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statCycles">3</div>
+        <div class="label">Cycles</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statIndustries">15</div>
+        <div class="label">Industries</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statRegions">5</div>
+        <div class="label">Regions</div>
+      </div>
+    </div>
+
+    <h3>Run History</h3>
+    <div id="historyList" class="history-list">
+      <div class="history-item">
+        <span class="time">14:32</span>
+        <span class="detail">Full Scan</span>
+        <span class="signals-count">47 signals</span>
+      </div>
+      <div class="history-item">
+        <span class="time">14:01</span>
+        <span class="detail">Asia-Pacific</span>
+        <span class="signals-count">18 signals</span>
+      </div>
+      <div class="history-item">
+        <span class="time">13:30</span>
+        <span class="detail">CES 2026</span>
+        <span class="signals-count">12 signals</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="trends" onclick="switchTab('trends')">Top Trends</button>
+      <button class="tab" data-tab="industries" onclick="switchTab('industries')">Industries</button>
+      <button class="tab" data-tab="regions" onclick="switchTab('regions')">Regions</button>
+      <button class="tab" data-tab="opportunities" onclick="switchTab('opportunities')">Opportunities</button>
+      <button class="tab" data-tab="shows" onclick="switchTab('shows')">Trade Shows</button>
+    </div>
+
+    <!-- Tab: Trends -->
+    <div id="tab-trends" class="tab-content active">
+      <div id="trendsContent" class="trends-grid"></div>
+    </div>
+
+    <!-- Tab: Industries -->
+    <div id="tab-industries" class="tab-content">
+      <div id="industriesContent" class="insights-grid"></div>
+    </div>
+
+    <!-- Tab: Regions -->
+    <div id="tab-regions" class="tab-content">
+      <div id="regionsContent" class="insights-grid"></div>
+    </div>
+
+    <!-- Tab: Opportunities -->
+    <div id="tab-opportunities" class="tab-content">
+      <div id="opportunitiesContent" class="opportunity-list"></div>
+    </div>
+
+    <!-- Tab: Shows -->
+    <div id="tab-shows" class="tab-content">
+      <div id="showsContent" class="shows-table-wrap"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ============================================================
+// EMBEDDED DEMO DATA
+// ============================================================
+
+const INDUSTRIES = [
+  "Technology & Electronics","Healthcare & Medical Devices","Automotive & Transportation",
+  "Food & Beverage","Energy & Sustainability","Fashion & Textiles",
+  "Construction & Real Estate","Agriculture & Farming","Defense & Aerospace",
+  "Retail & E-Commerce","Manufacturing & Industrial","Telecommunications",
+  "Entertainment & Media","Logistics & Supply Chain","Finance & Fintech"
+];
+
+const REGIONS = ["North America","Europe","Asia-Pacific","Middle East & Africa","Latin America"];
+
+const KNOWN_SHOWS = [
+  {name:"CES",industry:"Technology & Electronics",location:"Las Vegas, USA",region:"North America",month:"January",frequency:"Annual"},
+  {name:"MWC",industry:"Telecommunications",location:"Barcelona, Spain",region:"Europe",month:"February",frequency:"Annual"},
+  {name:"Hannover Messe",industry:"Manufacturing & Industrial",location:"Hannover, Germany",region:"Europe",month:"April",frequency:"Annual"},
+  {name:"MEDICA",industry:"Healthcare & Medical Devices",location:"Dusseldorf, Germany",region:"Europe",month:"November",frequency:"Annual"},
+  {name:"SXSW",industry:"Technology & Electronics",location:"Austin, USA",region:"North America",month:"March",frequency:"Annual"},
+  {name:"NRF",industry:"Retail & E-Commerce",location:"New York, USA",region:"North America",month:"January",frequency:"Annual"},
+  {name:"Computex",industry:"Technology & Electronics",location:"Taipei, Taiwan",region:"Asia-Pacific",month:"June",frequency:"Annual"},
+  {name:"GITEX",industry:"Technology & Electronics",location:"Dubai, UAE",region:"Middle East & Africa",month:"October",frequency:"Annual"},
+  {name:"Canton Fair",industry:"Manufacturing & Industrial",location:"Guangzhou, China",region:"Asia-Pacific",month:"April/October",frequency:"Biannual"},
+  {name:"Auto Shanghai",industry:"Automotive & Transportation",location:"Shanghai, China",region:"Asia-Pacific",month:"April",frequency:"Biannual"},
+  {name:"SIAL Paris",industry:"Food & Beverage",location:"Paris, France",region:"Europe",month:"October",frequency:"Biennial"},
+  {name:"Intersolar",industry:"Energy & Sustainability",location:"Munich, Germany",region:"Europe",month:"June",frequency:"Annual"},
+  {name:"Bauma",industry:"Construction & Real Estate",location:"Munich, Germany",region:"Europe",month:"April",frequency:"Triennial"},
+  {name:"Agritechnica",industry:"Agriculture & Farming",location:"Hannover, Germany",region:"Europe",month:"November",frequency:"Biennial"},
+  {name:"IFA Berlin",industry:"Technology & Electronics",location:"Berlin, Germany",region:"Europe",month:"September",frequency:"Annual"},
+  {name:"Web Summit",industry:"Technology & Electronics",location:"Lisbon, Portugal",region:"Europe",month:"November",frequency:"Annual"},
+  {name:"ChinaJoy",industry:"Entertainment & Media",location:"Shanghai, China",region:"Asia-Pacific",month:"July",frequency:"Annual"},
+  {name:"LogiMAT",industry:"Logistics & Supply Chain",location:"Stuttgart, Germany",region:"Europe",month:"March",frequency:"Annual"},
+  {name:"Money20/20",industry:"Finance & Fintech",location:"Las Vegas, USA",region:"North America",month:"October",frequency:"Annual"},
+  {name:"Gulfood",industry:"Food & Beverage",location:"Dubai, UAE",region:"Middle East & Africa",month:"February",frequency:"Annual"},
+  {name:"Tokyo Game Show",industry:"Entertainment & Media",location:"Tokyo, Japan",region:"Asia-Pacific",month:"September",frequency:"Annual"},
+  {name:"ADIPEC",industry:"Energy & Sustainability",location:"Abu Dhabi, UAE",region:"Middle East & Africa",month:"November",frequency:"Annual"},
+  {name:"Texworld Paris",industry:"Fashion & Textiles",location:"Paris, France",region:"Europe",month:"Feb/Sep",frequency:"Biannual"},
+  {name:"AAPEX",industry:"Automotive & Transportation",location:"Las Vegas, USA",region:"North America",month:"November",frequency:"Annual"},
+  {name:"SHOT Show",industry:"Defense & Aerospace",location:"Las Vegas, USA",region:"North America",month:"January",frequency:"Annual"},
+  {name:"FIME",industry:"Healthcare & Medical Devices",location:"Miami, USA",region:"North America",month:"June",frequency:"Annual"},
+  {name:"ExpoAlimentaria",industry:"Food & Beverage",location:"Lima, Peru",region:"Latin America",month:"September",frequency:"Annual"},
+  {name:"FITUR",industry:"Retail & E-Commerce",location:"Madrid, Spain",region:"Europe",month:"January",frequency:"Annual"},
+];
+
+const DEMO_REPORT = {
+  global_trends: [
+    {title:"AI & Machine Learning",description:"Generative AI and large language models dominated trade show floors globally in 2026. From CES showcasing AI-powered consumer devices to Hannover Messe highlighting industrial AI copilots, this trend spans every major industry vertical. Enterprise AI adoption is accelerating with agentic workflows and domain-specific models.",score:52.8,signal_type:"growing",industries:["Technology & Electronics","Healthcare & Medical Devices","Manufacturing & Industrial","Finance & Fintech","Retail & E-Commerce"],regions:["North America","Europe","Asia-Pacific","Middle East & Africa"],source_events:["CES","Hannover Messe","GITEX","MWC","Web Summit"],total_mentions:14,avg_confidence:0.82,keywords:["artificial intelligence","machine learning","generative AI","LLM","AI copilot","agentic AI"],is_cross_industry:true,is_global:true},
+    {title:"Sustainability & Green Tech",description:"Net-zero commitments and circular economy solutions were featured prominently across trade shows. Intersolar reported record attendance, while ADIPEC showcased the energy transition. Sustainable packaging at SIAL Paris and green manufacturing at Hannover Messe show this trend is industry-wide.",score:46.3,signal_type:"growing",industries:["Energy & Sustainability","Manufacturing & Industrial","Food & Beverage","Automotive & Transportation","Construction & Real Estate"],regions:["Europe","North America","Asia-Pacific","Middle East & Africa"],source_events:["Intersolar","ADIPEC","Hannover Messe","SIAL Paris","Bauma"],total_mentions:11,avg_confidence:0.75,keywords:["sustainability","net zero","circular economy","green energy","carbon neutral","ESG"],is_cross_industry:true,is_global:true},
+    {title:"Robotics & Automation",description:"Collaborative robots (cobots), warehouse automation, and autonomous mobile robots were highlight themes at LogiMAT, Hannover Messe, and CES. Humanoid robots from multiple Chinese and US manufacturers generated significant buzz, with several moving from prototype to commercial deployment.",score:41.7,signal_type:"growing",industries:["Manufacturing & Industrial","Logistics & Supply Chain","Technology & Electronics","Healthcare & Medical Devices"],regions:["Asia-Pacific","Europe","North America"],source_events:["Hannover Messe","CES","LogiMAT","Canton Fair"],total_mentions:9,avg_confidence:0.78,keywords:["robotics","cobot","warehouse robot","humanoid robot","automation","AMR"],is_cross_industry:true,is_global:true},
+    {title:"Electric & Autonomous Vehicles",description:"Auto Shanghai 2026 was dominated by Chinese EV makers showcasing next-gen battery tech and autonomous driving features. Solid-state batteries and 800V architectures are becoming mainstream. AAPEX showed the aftermarket adapting to EV servicing demands.",score:38.2,signal_type:"growing",industries:["Automotive & Transportation","Energy & Sustainability","Technology & Electronics"],regions:["Asia-Pacific","Europe","North America"],source_events:["Auto Shanghai","AAPEX","CES"],total_mentions:8,avg_confidence:0.73,keywords:["electric vehicle","EV","autonomous driving","solid-state battery","800V","charging infrastructure"],is_cross_industry:true,is_global:true},
+    {title:"Cybersecurity",description:"With AI-powered threats escalating, cybersecurity solutions were a major focus at GITEX, MWC, and RSA-adjacent events. Zero-trust architecture, AI-driven threat detection, and quantum-safe encryption drew significant exhibitor and attendee interest.",score:34.5,signal_type:"growing",industries:["Technology & Electronics","Telecommunications","Finance & Fintech","Defense & Aerospace"],regions:["North America","Europe","Middle East & Africa"],source_events:["GITEX","MWC","Money20/20"],total_mentions:7,avg_confidence:0.71,keywords:["cybersecurity","zero trust","AI threat detection","quantum-safe","ransomware","SIEM"],is_cross_industry:true,is_global:false},
+    {title:"Digital Transformation",description:"Industry 4.0 and digital twin technologies are now considered mature but continue evolving. Smart factory demonstrations at Hannover Messe and digital commerce platforms at NRF show ongoing enterprise digital transformation.",score:30.9,signal_type:"mature",industries:["Manufacturing & Industrial","Retail & E-Commerce","Telecommunications"],regions:["Europe","North America","Asia-Pacific"],source_events:["Hannover Messe","NRF","MWC"],total_mentions:6,avg_confidence:0.65,keywords:["digital transformation","Industry 4.0","digital twin","smart factory","IoT"],is_cross_industry:true,is_global:true},
+    {title:"Health Tech & Biotech",description:"MEDICA 2025 showcased AI diagnostics, wearable health monitors, and precision medicine platforms. Point-of-care testing and remote patient monitoring solutions are scaling globally, with strong interest from Asia-Pacific markets.",score:29.4,signal_type:"growing",industries:["Healthcare & Medical Devices","Technology & Electronics"],regions:["Europe","North America","Asia-Pacific"],source_events:["MEDICA","CES","FIME"],total_mentions:6,avg_confidence:0.69,keywords:["medtech","AI diagnostics","wearable health","precision medicine","telemedicine","digital health"],is_cross_industry:false,is_global:true},
+    {title:"Supply Chain Innovation",description:"Nearshoring, supply chain visibility platforms, and AI-driven demand forecasting were key themes at LogiMAT and Canton Fair. Post-pandemic resilience strategies are now standard practice across industries.",score:27.1,signal_type:"growing",industries:["Logistics & Supply Chain","Manufacturing & Industrial","Retail & E-Commerce"],regions:["Europe","Asia-Pacific","North America"],source_events:["LogiMAT","Canton Fair","NRF"],total_mentions:5,avg_confidence:0.62,keywords:["supply chain","nearshoring","logistics","demand forecasting","visibility platform"],is_cross_industry:true,is_global:true},
+    {title:"Quantum Computing",description:"Still in early stages but gaining momentum at CES and Web Summit. Quantum-as-a-service offerings and quantum-safe cryptography are transitioning from research to early commercial deployment.",score:22.5,signal_type:"emerging",industries:["Technology & Electronics","Finance & Fintech","Defense & Aerospace"],regions:["North America","Europe"],source_events:["CES","Web Summit"],total_mentions:4,avg_confidence:0.55,keywords:["quantum computing","qubit","quantum advantage","quantum-safe","QaaS"],is_cross_industry:true,is_global:false},
+    {title:"Spatial Computing & XR",description:"Apple Vision Pro ecosystem and Meta Quest 3S drove renewed interest in spatial computing at CES and MWC. Industrial use cases (training, remote assistance) are seeing real adoption while consumer AR/VR growth remains cautious.",score:19.8,signal_type:"emerging",industries:["Technology & Electronics","Entertainment & Media","Manufacturing & Industrial"],regions:["North America","Asia-Pacific"],source_events:["CES","MWC","Tokyo Game Show"],total_mentions:4,avg_confidence:0.48,keywords:["spatial computing","XR","augmented reality","virtual reality","mixed reality","Vision Pro"],is_cross_industry:true,is_global:false},
+  ],
+  industry_insights: [
+    {industry:"Technology & Electronics",trend_direction:"accelerating",key_theme:"artificial intelligence",active_shows:["CES","Computex","IFA Berlin","SXSW","Web Summit"],top_trends:[{title:"AI & Machine Learning",score:52.8},{title:"Robotics & Automation",score:41.7},{title:"Spatial Computing & XR",score:19.8}]},
+    {industry:"Manufacturing & Industrial",trend_direction:"accelerating",key_theme:"automation",active_shows:["Hannover Messe","Canton Fair"],top_trends:[{title:"Robotics & Automation",score:41.7},{title:"Sustainability & Green Tech",score:46.3},{title:"Digital Transformation",score:30.9}]},
+    {industry:"Healthcare & Medical Devices",trend_direction:"accelerating",key_theme:"AI diagnostics",active_shows:["MEDICA","FIME"],top_trends:[{title:"Health Tech & Biotech",score:29.4},{title:"AI & Machine Learning",score:52.8}]},
+    {industry:"Automotive & Transportation",trend_direction:"accelerating",key_theme:"electric vehicle",active_shows:["Auto Shanghai","AAPEX"],top_trends:[{title:"Electric & Autonomous Vehicles",score:38.2},{title:"AI & Machine Learning",score:52.8}]},
+    {industry:"Energy & Sustainability",trend_direction:"accelerating",key_theme:"net zero",active_shows:["Intersolar","ADIPEC"],top_trends:[{title:"Sustainability & Green Tech",score:46.3},{title:"Electric & Autonomous Vehicles",score:38.2}]},
+    {industry:"Logistics & Supply Chain",trend_direction:"stable",key_theme:"nearshoring",active_shows:["LogiMAT"],top_trends:[{title:"Supply Chain Innovation",score:27.1},{title:"Robotics & Automation",score:41.7}]},
+    {industry:"Finance & Fintech",trend_direction:"accelerating",key_theme:"AI",active_shows:["Money20/20"],top_trends:[{title:"AI & Machine Learning",score:52.8},{title:"Cybersecurity",score:34.5},{title:"Quantum Computing",score:22.5}]},
+    {industry:"Telecommunications",trend_direction:"stable",key_theme:"5G",active_shows:["MWC"],top_trends:[{title:"AI & Machine Learning",score:52.8},{title:"Cybersecurity",score:34.5}]},
+    {industry:"Retail & E-Commerce",trend_direction:"stable",key_theme:"personalization",active_shows:["NRF","FITUR"],top_trends:[{title:"AI & Machine Learning",score:52.8},{title:"Digital Transformation",score:30.9}]},
+    {industry:"Food & Beverage",trend_direction:"stable",key_theme:"sustainability",active_shows:["SIAL Paris","Gulfood","ExpoAlimentaria"],top_trends:[{title:"Sustainability & Green Tech",score:46.3}]},
+  ],
+  regional_insights: [
+    {region:"North America",market_sentiment:"bullish",dominant_industries:["Technology & Electronics","Automotive & Transportation","Finance & Fintech"],top_trends:[{title:"AI & Machine Learning",score:52.8},{title:"Cybersecurity",score:34.5},{title:"Quantum Computing",score:22.5}]},
+    {region:"Europe",market_sentiment:"bullish",dominant_industries:["Manufacturing & Industrial","Energy & Sustainability","Healthcare & Medical Devices"],top_trends:[{title:"Sustainability & Green Tech",score:46.3},{title:"Robotics & Automation",score:41.7},{title:"Digital Transformation",score:30.9}]},
+    {region:"Asia-Pacific",market_sentiment:"bullish",dominant_industries:["Technology & Electronics","Automotive & Transportation","Manufacturing & Industrial"],top_trends:[{title:"Electric & Autonomous Vehicles",score:38.2},{title:"Robotics & Automation",score:41.7},{title:"AI & Machine Learning",score:52.8}]},
+    {region:"Middle East & Africa",market_sentiment:"neutral",dominant_industries:["Technology & Electronics","Energy & Sustainability","Food & Beverage"],top_trends:[{title:"AI & Machine Learning",score:52.8},{title:"Sustainability & Green Tech",score:46.3},{title:"Cybersecurity",score:34.5}]},
+    {region:"Latin America",market_sentiment:"neutral",dominant_industries:["Food & Beverage","Agriculture & Farming"],top_trends:[{title:"Sustainability & Green Tech",score:46.3}]},
+  ],
+  emerging_opportunities: [
+    "Cross-industry emerging trend: <strong>'Quantum Computing'</strong> is gaining traction across Technology & Electronics, Finance & Fintech, and Defense & Aerospace in North America and Europe.",
+    "Cross-industry emerging trend: <strong>'Spatial Computing & XR'</strong> is gaining traction across Technology & Electronics, Entertainment & Media, and Manufacturing & Industrial.",
+    "Scaling globally: <strong>'AI & Machine Learning'</strong> is expanding worldwide with 14 mentions across 4 regions — the dominant theme at every major trade show in 2026.",
+    "Scaling globally: <strong>'Sustainability & Green Tech'</strong> is expanding worldwide with 11 mentions across 4 regions, driven by regulatory pressure and consumer demand.",
+    "Scaling globally: <strong>'Robotics & Automation'</strong> is expanding worldwide with 9 mentions across 3 regions, with humanoid robots moving to commercial deployment.",
+    "Emerging cluster in <strong>Asia-Pacific</strong>: EV battery innovation, humanoid robotics, and AI semiconductor design are converging as emerging themes.",
+    "Emerging cluster in <strong>Middle East & Africa</strong>: AI-driven smart city infrastructure and energy transition technologies are emerging themes at GITEX and ADIPEC.",
+    "Untapped opportunity: <strong>Latin America</strong> shows growing agri-tech and food sustainability trends at ExpoAlimentaria but limited AI/robotics presence — potential growth market.",
+  ],
+};
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Populate dropdowns
+  const selInd = document.getElementById('selIndustry');
+  INDUSTRIES.forEach(i => {
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = i;
+    selInd.appendChild(opt);
+  });
+  const selReg = document.getElementById('selRegion');
+  REGIONS.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r; opt.textContent = r;
+    selReg.appendChild(opt);
+  });
+
+  // Render everything
+  renderTrends(DEMO_REPORT.global_trends);
+  renderIndustries(DEMO_REPORT.industry_insights);
+  renderRegions(DEMO_REPORT.regional_insights);
+  renderOpportunities(DEMO_REPORT.emerging_opportunities);
+  renderShows(KNOWN_SHOWS);
+});
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+// ============================================================
+// FILTER & SIMULATE
+// ============================================================
+
+function simulateRun() {
+  const badge = document.getElementById('statusBadge');
+  badge.className = 'status-badge status-running';
+  badge.innerHTML = 'Analyzing...';
+
+  setTimeout(() => {
+    badge.className = 'status-badge status-done';
+    badge.textContent = 'Ready';
+
+    const industry = document.getElementById('selIndustry').value;
+    const region = document.getElementById('selRegion').value;
+
+    // Filter trends based on selection
+    let filtered = DEMO_REPORT.global_trends;
+    if (industry) {
+      filtered = filtered.filter(t => t.industries.includes(industry));
+    }
+    if (region) {
+      filtered = filtered.filter(t => t.regions.includes(region));
+    }
+    renderTrends(filtered);
+
+    // Update stats
+    document.getElementById('statSignals').textContent = Math.floor(Math.random() * 20) + 30;
+    document.getElementById('statCycles').textContent = parseInt(document.getElementById('statCycles').textContent) + 1;
+  }, 2000);
+}
+
+function resetFilters() {
+  document.getElementById('selIndustry').value = '';
+  document.getElementById('selRegion').value = '';
+  document.getElementById('inputShow').value = '';
+  renderTrends(DEMO_REPORT.global_trends);
+}
+
+// ============================================================
+// RENDERERS
+// ============================================================
+
+function renderTrends(trends) {
+  let html = '';
+  if (!trends.length) {
+    html = '<div style="text-align:center;padding:40px;color:var(--text-muted);">No trends match the selected filters.</div>';
+  }
+  trends.forEach((t, i) => {
+    const typeClass = `tag-${t.signal_type}`;
+    html += `<div class="trend-card">
+      <div class="trend-header">
+        <span class="trend-rank">#${i+1}</span>
+        <span class="trend-title">${t.title}</span>
+        <span class="trend-score">${t.score}</span>
+      </div>
+      <div class="trend-meta">
+        <span class="tag ${typeClass}">${t.signal_type}</span>
+        ${t.is_cross_industry ? '<span class="tag tag-cross">Cross-Industry</span>' : ''}
+        ${t.is_global ? '<span class="tag tag-global">Global</span>' : ''}
+        ${t.industries.slice(0, 3).map(ind => `<span class="tag tag-industry">${ind}</span>`).join('')}
+        ${t.regions.slice(0, 2).map(r => `<span class="tag tag-region">${r}</span>`).join('')}
+      </div>
+      <div class="trend-desc">${t.description}</div>
+      <div class="trend-footer">
+        <div><strong>${t.total_mentions}</strong> mentions across <strong>${t.source_events.length}</strong> events &nbsp;|&nbsp; Confidence: <strong>${(t.avg_confidence * 100).toFixed(0)}%</strong></div>
+        <div class="keywords">${t.keywords.slice(0,5).map(k => `<span>${k}</span>`).join('')}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('trendsContent').innerHTML = html;
+}
+
+function renderIndustries(insights) {
+  let html = '';
+  insights.forEach(ins => {
+    const dirColors = {accelerating:'var(--green)',stable:'var(--orange)',shifting:'var(--red)'};
+    const dirColor = dirColors[ins.trend_direction] || 'var(--text-muted)';
+    html += `<div class="insight-card">
+      <h4>${ins.industry}</h4>
+      <div class="meta-row">Direction: <strong style="color:${dirColor}">${ins.trend_direction}</strong></div>
+      <div class="meta-row">Key Theme: <strong>${ins.key_theme}</strong></div>
+      <div class="meta-row">Shows: ${ins.active_shows.slice(0,4).join(', ')}</div>
+      <div class="trend-list">
+        ${(ins.top_trends || []).map(t => `
+          <div class="trend-list-item">
+            <span class="name">${t.title}</span>
+            <span class="score">${t.score}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+  document.getElementById('industriesContent').innerHTML = html;
+}
+
+function renderRegions(insights) {
+  let html = '';
+  insights.forEach(ins => {
+    const sentColors = {bullish:'var(--green)',neutral:'var(--orange)',cautious:'var(--red)'};
+    const sentColor = sentColors[ins.market_sentiment] || 'var(--text-muted)';
+    html += `<div class="insight-card">
+      <h4>${ins.region}</h4>
+      <div class="meta-row">Sentiment: <strong style="color:${sentColor}">${ins.market_sentiment}</strong></div>
+      <div class="meta-row">Top Industries: ${ins.dominant_industries.join(', ')}</div>
+      <div class="trend-list">
+        ${(ins.top_trends || []).map(t => `
+          <div class="trend-list-item">
+            <span class="name">${t.title}</span>
+            <span class="score">${t.score}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+  document.getElementById('regionsContent').innerHTML = html;
+}
+
+function renderOpportunities(opps) {
+  let html = '';
+  opps.forEach(o => { html += `<div class="opportunity-item">${o}</div>`; });
+  document.getElementById('opportunitiesContent').innerHTML = html;
+}
+
+function renderShows(shows) {
+  let html = '<table class="shows-table"><thead><tr>';
+  html += '<th>Name</th><th>Industry</th><th>Location</th><th>Region</th><th>When</th><th>Frequency</th>';
+  html += '</tr></thead><tbody>';
+  shows.forEach(s => {
+    html += `<tr>
+      <td class="show-name">${s.name}</td>
+      <td class="show-industry">${s.industry}</td>
+      <td>${s.location}</td>
+      <td>${s.region}</td>
+      <td>${s.month || 'TBD'}</td>
+      <td>${s.frequency || '-'}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('showsContent').innerHTML = html;
+}
+</script>
+</body>
+</html>
