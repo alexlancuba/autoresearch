@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trade Show Trend Analysis</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242836;
+    --border: #2e3348;
+    --text: #e4e6f0;
+    --text-muted: #8b8fa8;
+    --accent: #6c63ff;
+    --accent-light: #8b84ff;
+    --green: #34d399;
+    --orange: #fbbf24;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --cyan: #22d3ee;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* --- Header --- */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header h1 .logo {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .status-idle { background: var(--surface2); color: var(--text-muted); }
+  .status-running { background: rgba(108, 99, 255, 0.2); color: var(--accent-light); animation: pulse 2s infinite; }
+  .status-done { background: rgba(52, 211, 153, 0.2); color: var(--green); }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* --- Layout --- */
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* --- Sidebar --- */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .sidebar h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    margin-top: 20px;
+  }
+  .sidebar h3:first-child { margin-top: 0; }
+
+  .control-group { margin-bottom: 16px; }
+  .control-group label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .control-group select, .control-group input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+  }
+  .control-group select:focus, .control-group input:focus {
+    border-color: var(--accent);
+  }
+  select option { background: var(--surface2); }
+
+  .btn {
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--accent-light); }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); }
+  .btn-danger {
+    background: rgba(248, 113, 113, 0.15);
+    color: var(--red);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .stat-card {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-card .value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent-light);
+  }
+  .stat-card .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* --- Main Content --- */
+  .main {
+    padding: 24px;
+    overflow-y: auto;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+  .tab {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--accent-light);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* --- Welcome / Empty State --- */
+  .empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    color: var(--text-muted);
+  }
+  .empty-state .icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+  .empty-state h2 {
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .empty-state p { font-size: 14px; max-width: 400px; margin: 0 auto; }
+
+  /* --- Trend Cards --- */
+  .trends-grid {
+    display: grid;
+    gap: 12px;
+  }
+  .trend-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    transition: border-color 0.2s;
+  }
+  .trend-card:hover { border-color: var(--accent); }
+  .trend-card .trend-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .trend-card .trend-rank {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(108, 99, 255, 0.15);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 10px;
+  }
+  .trend-card .trend-title {
+    font-size: 15px;
+    font-weight: 600;
+    flex: 1;
+  }
+  .trend-card .trend-score {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green);
+  }
+  .trend-card .trend-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .tag-emerging { background: rgba(34, 211, 238, 0.15); color: var(--cyan); }
+  .tag-growing { background: rgba(52, 211, 153, 0.15); color: var(--green); }
+  .tag-mature { background: rgba(251, 191, 36, 0.15); color: var(--orange); }
+  .tag-declining { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+  .tag-industry { background: rgba(96, 165, 250, 0.15); color: var(--blue); }
+  .tag-region { background: rgba(139, 132, 255, 0.15); color: var(--accent-light); }
+  .tag-cross { background: rgba(251, 191, 36, 0.15); color: var(--orange); }
+  .tag-global { background: rgba(34, 211, 238, 0.15); color: var(--cyan); }
+
+  .trend-card .trend-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .trend-card .trend-keywords {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* --- Industry & Region Cards --- */
+  .insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+  }
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .insight-card h4 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .insight-card .meta-row {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .insight-card .meta-row strong { color: var(--text); }
+  .insight-card ul {
+    list-style: none;
+    margin-top: 8px;
+  }
+  .insight-card ul li {
+    font-size: 12px;
+    padding: 3px 0;
+    color: var(--text-muted);
+  }
+  .insight-card ul li::before {
+    content: ">";
+    margin-right: 6px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* --- Opportunities --- */
+  .opportunity-list {
+    display: grid;
+    gap: 8px;
+  }
+  .opportunity-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* --- Shows Table --- */
+  .shows-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .shows-table th {
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .shows-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .shows-table tr:hover td { background: var(--surface); }
+
+  /* --- History --- */
+  .history-list { display: grid; gap: 6px; }
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .history-item .time { color: var(--text-muted); font-size: 12px; }
+  .history-item .detail { flex: 1; margin-left: 12px; }
+
+  /* --- Loading spinner --- */
+  .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top: 2px solid var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* --- Responsive --- */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .insights-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>
+    <span class="logo">TS</span>
+    Trade Show Trend Analysis
+  </h1>
+  <span id="statusBadge" class="status-badge status-idle">Idle</span>
+</div>
+
+<!-- Layout -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h3>Analysis Controls</h3>
+
+    <div class="control-group">
+      <label>Industry</label>
+      <select id="selIndustry">
+        <option value="">All Industries</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Region</label>
+      <select id="selRegion">
+        <option value="">All Regions</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Trade Show</label>
+      <input type="text" id="inputShow" placeholder="e.g. CES, MWC, GITEX...">
+    </div>
+
+    <button id="btnRun" class="btn btn-primary" onclick="runAnalysis()">
+      Run Analysis
+    </button>
+    <button id="btnStop" class="btn btn-danger" onclick="stopAnalysis()" style="display:none;">
+      Stop Analysis
+    </button>
+
+    <h3>Agent Status</h3>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="value" id="statSignals">0</div>
+        <div class="label">Signals</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statCycles">0</div>
+        <div class="label">Cycles</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statIndustries">0</div>
+        <div class="label">Industries</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="statRegions">0</div>
+        <div class="label">Regions</div>
+      </div>
+    </div>
+
+    <h3>Run History</h3>
+    <div id="historyList" class="history-list">
+      <div style="font-size:12px;color:var(--text-muted);">No runs yet</div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="trends" onclick="switchTab('trends')">Top Trends</button>
+      <button class="tab" data-tab="industries" onclick="switchTab('industries')">Industries</button>
+      <button class="tab" data-tab="regions" onclick="switchTab('regions')">Regions</button>
+      <button class="tab" data-tab="opportunities" onclick="switchTab('opportunities')">Opportunities</button>
+      <button class="tab" data-tab="shows" onclick="switchTab('shows')">Trade Shows</button>
+    </div>
+
+    <!-- Tab: Trends -->
+    <div id="tab-trends" class="tab-content active">
+      <div id="trendsContent" class="trends-grid">
+        <div class="empty-state">
+          <div class="icon">&#x1F50D;</div>
+          <h2>No Trends Yet</h2>
+          <p>Select your filters and click "Run Analysis" to start researching trade show trends across industries and regions.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Industries -->
+    <div id="tab-industries" class="tab-content">
+      <div id="industriesContent" class="insights-grid">
+        <div class="empty-state">
+          <div class="icon">&#x1F3ED;</div>
+          <h2>No Industry Data</h2>
+          <p>Run an analysis to see per-industry insights.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Regions -->
+    <div id="tab-regions" class="tab-content">
+      <div id="regionsContent" class="insights-grid">
+        <div class="empty-state">
+          <div class="icon">&#x1F30D;</div>
+          <h2>No Regional Data</h2>
+          <p>Run an analysis to see regional market insights.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Opportunities -->
+    <div id="tab-opportunities" class="tab-content">
+      <div id="opportunitiesContent" class="opportunity-list">
+        <div class="empty-state">
+          <div class="icon">&#x1F4A1;</div>
+          <h2>No Opportunities Yet</h2>
+          <p>Run an analysis to discover emerging opportunities.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Shows -->
+    <div id="tab-shows" class="tab-content">
+      <div id="showsContent"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = '';
+
+// --- Init ---
+document.addEventListener('DOMContentLoaded', () => {
+  loadDropdowns();
+  loadShows();
+  pollStatus();
+  setInterval(pollStatus, 3000);
+});
+
+// --- Tabs ---
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+// --- Load dropdowns ---
+async function loadDropdowns() {
+  try {
+    const [industries, regions] = await Promise.all([
+      fetch(`${API}/api/industries`).then(r => r.json()),
+      fetch(`${API}/api/regions`).then(r => r.json()),
+    ]);
+    const selInd = document.getElementById('selIndustry');
+    industries.forEach(i => {
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = i;
+      selInd.appendChild(opt);
+    });
+    const selReg = document.getElementById('selRegion');
+    regions.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r; opt.textContent = r;
+      selReg.appendChild(opt);
+    });
+  } catch(e) { console.error('Failed to load dropdowns:', e); }
+}
+
+// --- Load shows table ---
+async function loadShows() {
+  try {
+    const shows = await fetch(`${API}/api/shows`).then(r => r.json());
+    let html = '<table class="shows-table"><thead><tr>';
+    html += '<th>Name</th><th>Industry</th><th>Location</th><th>Region</th><th>When</th><th>Frequency</th>';
+    html += '</tr></thead><tbody>';
+    shows.forEach(s => {
+      html += `<tr>
+        <td><strong>${s.name}</strong></td>
+        <td>${s.industry}</td>
+        <td>${s.location}</td>
+        <td>${s.region}</td>
+        <td>${s.month || 'TBD'}</td>
+        <td>${s.frequency || '-'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('showsContent').innerHTML = html;
+  } catch(e) { console.error('Failed to load shows:', e); }
+}
+
+// --- Poll status ---
+async function pollStatus() {
+  try {
+    const status = await fetch(`${API}/api/status`).then(r => r.json());
+
+    document.getElementById('statSignals').textContent = status.total_signals || 0;
+    document.getElementById('statCycles').textContent = status.cycles_completed || 0;
+    document.getElementById('statIndustries').textContent = status.industries_tracked || 0;
+    document.getElementById('statRegions').textContent = status.regions_tracked || 0;
+
+    const badge = document.getElementById('statusBadge');
+    const btnRun = document.getElementById('btnRun');
+    const btnStop = document.getElementById('btnStop');
+
+    if (status.is_running) {
+      badge.className = 'status-badge status-running';
+      badge.innerHTML = '<span class="spinner"></span> Analyzing';
+      btnRun.disabled = true;
+      btnRun.textContent = 'Running...';
+      btnStop.style.display = 'block';
+    } else {
+      badge.className = status.has_report ? 'status-badge status-done' : 'status-badge status-idle';
+      badge.textContent = status.has_report ? 'Ready' : 'Idle';
+      btnRun.disabled = false;
+      btnRun.textContent = 'Run Analysis';
+      btnStop.style.display = 'none';
+
+      // If report available, load it
+      if (status.has_report) {
+        loadReport();
+      }
+    }
+
+    // Load history
+    const history = await fetch(`${API}/api/history`).then(r => r.json());
+    if (history.length > 0) {
+      let hhtml = '';
+      history.slice().reverse().forEach(h => {
+        const scope = h.show || h.industry || h.region || 'Full Scan';
+        const statusClass = h.status === 'completed' ? 'color:var(--green)' : 'color:var(--red)';
+        hhtml += `<div class="history-item">
+          <span class="time">${h.timestamp.split('T')[1] || h.timestamp}</span>
+          <span class="detail">${scope}</span>
+          <span style="${statusClass}">${h.signals} signals</span>
+        </div>`;
+      });
+      document.getElementById('historyList').innerHTML = hhtml;
+    }
+
+  } catch(e) { /* server not ready */ }
+}
+
+// --- Run analysis ---
+async function runAnalysis() {
+  const industry = document.getElementById('selIndustry').value || undefined;
+  const region = document.getElementById('selRegion').value || undefined;
+  const show = document.getElementById('inputShow').value || undefined;
+
+  try {
+    await fetch(`${API}/api/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ industry, region, show, format: 'json' }),
+    });
+    pollStatus();
+  } catch(e) { alert('Failed to start analysis: ' + e); }
+}
+
+// --- Stop analysis ---
+async function stopAnalysis() {
+  try {
+    await fetch(`${API}/api/stop`, { method: 'POST' });
+    pollStatus();
+  } catch(e) { console.error(e); }
+}
+
+// --- Load report ---
+let lastReportTimestamp = null;
+async function loadReport() {
+  try {
+    const report = await fetch(`${API}/api/report`).then(r => r.json());
+    if (report.error) return;
+    if (report.timestamp === lastReportTimestamp) return;
+    lastReportTimestamp = report.timestamp;
+
+    renderTrends(report.global_trends || []);
+    renderIndustries(report.industry_insights || []);
+    renderRegions(report.regional_insights || []);
+    renderOpportunities(report.emerging_opportunities || []);
+  } catch(e) { /* no report yet */ }
+}
+
+// --- Render trends ---
+function renderTrends(trends) {
+  if (!trends.length) return;
+  let html = '';
+  trends.forEach((t, i) => {
+    const typeClass = `tag-${t.signal_type}`;
+    html += `<div class="trend-card">
+      <div class="trend-header">
+        <span class="trend-rank">#${i+1}</span>
+        <span class="trend-title">${t.title}</span>
+        <span class="trend-score">Score: ${t.score}</span>
+      </div>
+      <div class="trend-meta">
+        <span class="tag ${typeClass}">${t.signal_type}</span>
+        ${t.is_cross_industry ? '<span class="tag tag-cross">Cross-Industry</span>' : ''}
+        ${t.is_global ? '<span class="tag tag-global">Global</span>' : ''}
+        ${(t.industries || []).slice(0, 2).map(ind => `<span class="tag tag-industry">${ind}</span>`).join('')}
+        ${(t.regions || []).slice(0, 2).map(r => `<span class="tag tag-region">${r}</span>`).join('')}
+      </div>
+      <div class="trend-desc">${t.description}</div>
+      <div class="trend-keywords">
+        <strong>Mentions:</strong> ${t.total_mentions} across ${(t.source_events||[]).length} events
+        ${t.keywords && t.keywords.length ? ` | <strong>Keywords:</strong> ${t.keywords.slice(0,6).join(', ')}` : ''}
+      </div>
+    </div>`;
+  });
+  document.getElementById('trendsContent').innerHTML = html;
+}
+
+// --- Render industries ---
+function renderIndustries(insights) {
+  if (!insights.length) return;
+  let html = '';
+  insights.forEach(ins => {
+    const dirColor = ins.trend_direction === 'accelerating' ? 'var(--green)' :
+                     ins.trend_direction === 'shifting' ? 'var(--orange)' : 'var(--text-muted)';
+    html += `<div class="insight-card">
+      <h4>${ins.industry}</h4>
+      <div class="meta-row">Direction: <strong style="color:${dirColor}">${ins.trend_direction}</strong></div>
+      <div class="meta-row">Key Theme: <strong>${ins.key_theme}</strong></div>
+      <div class="meta-row">Active Shows: ${(ins.active_shows||[]).slice(0,3).join(', ')}</div>
+      <ul>
+        ${(ins.top_trends || []).slice(0, 3).map(t => `<li>${t.title} (score: ${t.score})</li>`).join('')}
+      </ul>
+    </div>`;
+  });
+  document.getElementById('industriesContent').innerHTML = html;
+}
+
+// --- Render regions ---
+function renderRegions(insights) {
+  if (!insights.length) return;
+  let html = '';
+  insights.forEach(ins => {
+    const sentColor = ins.market_sentiment === 'bullish' ? 'var(--green)' :
+                      ins.market_sentiment === 'cautious' ? 'var(--red)' : 'var(--orange)';
+    html += `<div class="insight-card">
+      <h4>${ins.region}</h4>
+      <div class="meta-row">Sentiment: <strong style="color:${sentColor}">${ins.market_sentiment}</strong></div>
+      <div class="meta-row">Top Industries: ${(ins.dominant_industries||[]).join(', ')}</div>
+      <ul>
+        ${(ins.top_trends || []).slice(0, 3).map(t => `<li>${t.title} (score: ${t.score})</li>`).join('')}
+      </ul>
+    </div>`;
+  });
+  document.getElementById('regionsContent').innerHTML = html;
+}
+
+// --- Render opportunities ---
+function renderOpportunities(opps) {
+  if (!opps.length) return;
+  let html = '';
+  opps.forEach(o => {
+    html += `<div class="opportunity-item">${o}</div>`;
+  });
+  document.getElementById('opportunitiesContent').innerHTML = html;
+}
+</script>
+</body>
+</html>

@@ -279,6 +279,10 @@ Examples:
                         help="List all tracked regions")
     parser.add_argument("--list-shows", action="store_true",
                         help="List all known trade shows")
+    parser.add_argument("--ui", action="store_true",
+                        help="Launch the web dashboard UI")
+    parser.add_argument("--port", type=int, default=8050,
+                        help="Port for the web dashboard (default: 8050)")
 
     args = parser.parse_args()
 
@@ -301,6 +305,12 @@ Examples:
         for show in KNOWN_TRADE_SHOWS:
             print(f"  - {show['name']} ({show['industry']}) - "
                   f"{show['location']}, {show.get('month', 'TBD')}")
+        return
+
+    # Web dashboard
+    if args.ui:
+        from .server import run_server
+        run_server(port=args.port)
         return
 
     # Configure and run
