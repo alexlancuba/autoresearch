@@ -71,23 +71,16 @@ _DEFAULT_EXTRACTION_PROMPTS: dict[str, str] = {
 }
 
 _DEFAULT_SIGNAL_TAXONOMY: list[str] = [
-    "AI Personalization",
-    "AI Diagnostics",
-    "AI Infrastructure",
-    "Autonomous Retail",
-    "Digital Twin Technology",
-    "Edge AI Computing",
-    "Green Supply Chain",
-    "Hydrogen Aviation",
-    "Precision Agriculture",
-    "Private 5G Networks",
-    "Smart Building AI",
-    "Smart City Infrastructure",
-    "Solid-State Batteries",
-    "Sustainable Exhibit Design",
-    "Sustainable Manufacturing",
-    "Sustainable Packaging",
-    "Telemedicine Expansion",
+    "AI & Machine Learning",
+    "Cybersecurity",
+    "Digital Transformation",
+    "Electric & Autonomous Vehicles",
+    "Health Tech & Biotech",
+    "Quantum Computing",
+    "Robotics & Automation",
+    "Spatial Computing & XR",
+    "Supply Chain Innovation",
+    "Sustainability & Green Tech",
 ]
 
 _DEFAULT_FRESHNESS_WINDOWS: dict[str, int] = {
