@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trade Show Trend Analysis - Dashboard Preview</title>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #1c2333;
+  --bg-card: #1a1f2e;
+  --bg-card-hover: #222838;
+  --border: #30363d;
+  --border-light: #3d4450;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --accent-blue: #388bfd;
+  --accent-green: #3fb950;
+  --accent-purple: #a371f7;
+  --accent-orange: #d29922;
+  --accent-red: #f85149;
+  --accent-cyan: #39d2c0;
+  --accent-pink: #db61a2;
+  --lifecycle-emerging: #a371f7;
+  --lifecycle-growing: #3fb950;
+  --lifecycle-mature: #388bfd;
+  --lifecycle-declining: #f85149;
+  --tag-cross-industry: #388bfd;
+  --tag-global: #8b949e;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+}
+
+html {
+  font-size: 14px;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.app-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 200px;
+  min-width: 200px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px 24px;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.app-icon {
+  width: 28px;
+  height: 28px;
+  background: var(--accent-cyan);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--bg-primary);
+}
+
+.app-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-badges {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-preview {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.badge-ready {
+  background: #0e3a1e;
+  color: var(--accent-green);
+}
+
+/* ── Sidebar sections ────────────────────────────────────────────────────── */
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+.sidebar-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.sidebar-select {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+.sidebar-select:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+}
+
+.sidebar-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: var(--font-sans);
+}
+
+.sidebar-input::placeholder {
+  color: var(--text-muted);
+}
+
+.sidebar-input:focus {
+  outline: none;
+  border-color: var(--accent-blue);
+  color: var(--text-primary);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 10px;
+  background: var(--accent-green);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.btn-secondary:hover {
+  color: var(--text-primary);
+}
+
+/* ── Agent Status ────────────────────────────────────────────────────────── */
+.agent-status {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stat-box {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── Run History ─────────────────────────────────────────────────────────── */
+.run-history {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.run-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.run-time {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  min-width: 36px;
+}
+
+.run-scope {
+  color: var(--text-primary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.run-signals {
+  color: var(--accent-green);
+  font-weight: 600;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tab.active {
+  color: var(--accent-blue);
+  border-bottom-color: var(--accent-blue);
+}
+
+/* ── Trend Cards ─────────────────────────────────────────────────────────── */
+.trend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.trend-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  transition: border-color 0.15s;
+}
+
+.trend-card:hover {
+  border-color: var(--border-light);
+}
+
+.trend-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.trend-rank {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 24px;
+}
+
+.trend-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.trend-score {
+  margin-left: auto;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.score-high {
+  color: var(--accent-green);
+}
+.score-medium {
+  color: var(--accent-orange);
+}
+.score-low {
+  color: var(--accent-purple);
+}
+
+/* ── Tags ────────────────────────────────────────────────────────────────── */
+.trend-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tag-lifecycle {
+  color: #fff;
+}
+
+.tag-lifecycle.emerging {
+  background: rgba(163, 113, 247, 0.2);
+  color: var(--lifecycle-emerging);
+}
+
+.tag-lifecycle.growing {
+  background: rgba(63, 185, 80, 0.2);
+  color: var(--lifecycle-growing);
+}
+
+.tag-lifecycle.mature {
+  background: rgba(56, 139, 253, 0.2);
+  color: var(--lifecycle-mature);
+}
+
+.tag-lifecycle.declining {
+  background: rgba(248, 81, 73, 0.2);
+  color: var(--lifecycle-declining);
+}
+
+.tag-cross-industry {
+  background: rgba(56, 139, 253, 0.2);
+  color: var(--tag-cross-industry);
+}
+
+.tag-scope {
+  background: rgba(139, 148, 158, 0.15);
+  color: var(--text-secondary);
+}
+
+.tag-industry {
+  background: rgba(139, 148, 158, 0.1);
+  color: var(--text-secondary);
+}
+
+.tag-region {
+  background: rgba(139, 148, 158, 0.1);
+  color: var(--text-secondary);
+}
+
+/* ── Trend Description ───────────────────────────────────────────────────── */
+.trend-description {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.trend-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.trend-meta-left {
+  display: flex;
+  gap: 6px;
+}
+
+.trend-keywords {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.keyword {
+  padding: 2px 8px;
+  background: rgba(139, 148, 158, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ── Tab Content Panels ──────────────────────────────────────────────────── */
+.panel {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.panel-hidden {
+  display: none;
+}
+
+/* ── Industries Panel ────────────────────────────────────────────────────── */
+.industry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+.industry-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.industry-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.industry-card-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.industry-card-count {
+  font-size: 12px;
+  color: var(--accent-green);
+  font-weight: 600;
+}
+
+.industry-card-trends {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.industry-trend-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.industry-trend-name {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.industry-trend-score {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* ── Regions Panel ───────────────────────────────────────────────────────── */
+.region-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.region-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.region-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.region-card-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.region-card-count {
+  font-size: 12px;
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.region-trend-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.region-trend-rank {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 20px;
+}
+
+.region-trend-name {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.region-trend-score {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* ── Trade Shows Panel ───────────────────────────────────────────────────── */
+.show-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 12px;
+}
+
+.show-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.show-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.show-card-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.show-card-short {
+  font-size: 12px;
+  color: var(--accent-blue);
+  font-weight: 600;
+}
+
+.show-card-location {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.show-card-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.show-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.show-tier {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.show-tier.global_flagship {
+  background: rgba(163, 113, 247, 0.15);
+  color: var(--accent-purple);
+}
+
+.show-tier.regional_major {
+  background: rgba(56, 139, 253, 0.15);
+  color: var(--accent-blue);
+}
+
+/* ── Opportunities Panel ─────────────────────────────────────────────────── */
+.opportunity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.opportunity-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+
+.opportunity-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.opportunity-type {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.opportunity-type.whitespace {
+  background: rgba(63, 185, 80, 0.15);
+  color: var(--accent-green);
+}
+
+.opportunity-type.convergence {
+  background: rgba(56, 139, 253, 0.15);
+  color: var(--accent-blue);
+}
+
+.opportunity-type.acceleration {
+  background: rgba(211, 153, 34, 0.15);
+  color: var(--accent-orange);
+}
+
+.opportunity-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.opportunity-description {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.opportunity-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-light);
+}
+
+/* ── Subtitle ────────────────────────────────────────────────────────────── */
+.app-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+/* ── No results ──────────────────────────────────────────────────────────── */
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Analysis Controls</div>
+      <div>
+        <div class="sidebar-label">Industry</div>
+        <select id="industryFilter" class="sidebar-select">
+          <option value="">All Industries</option>
+        </select>
+      </div>
+      <div>
+        <div class="sidebar-label">Region</div>
+        <select id="regionFilter" class="sidebar-select">
+          <option value="">All Regions</option>
+        </select>
+      </div>
+      <div>
+        <div class="sidebar-label">Trade Show</div>
+        <input id="showFilter" type="text" class="sidebar-input" placeholder="e.g. CES, MWC, GITEX...">
+      </div>
+      <button class="btn-primary" onclick="applyFilters()">Run Analysis</button>
+      <button class="btn-secondary" onclick="resetFilters()">Reset Filters</button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Agent Status</div>
+      <div class="agent-status">
+        <div class="stat-box">
+          <div class="stat-value">47</div>
+          <div class="stat-label">Signals</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">3</div>
+          <div class="stat-label">Cycles</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">15</div>
+          <div class="stat-label">Industries</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">5</div>
+          <div class="stat-label">Regions</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Run History</div>
+      <div class="run-history">
+        <div class="run-entry">
+          <span class="run-time">14:32</span>
+          <span class="run-scope">Full Scan</span>
+          <span class="run-signals">47 signals</span>
+        </div>
+        <div class="run-entry">
+          <span class="run-time">14:01</span>
+          <span class="run-scope">Asia-Pacific</span>
+          <span class="run-signals">18 signals</span>
+        </div>
+        <div class="run-entry">
+          <span class="run-time">13:30</span>
+          <span class="run-scope">CES 2026</span>
+          <span class="run-signals">12 signals</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="app-header">
+      <div class="app-icon">TS</div>
+      <div class="app-title">Trade Show Trend Analysis</div>
+      <div class="header-badges">
+        <span class="badge badge-preview">Preview Mode</span>
+        <span class="badge badge-ready">Ready</span>
+      </div>
+    </div>
+    <div class="app-subtitle">Autonomous trend detection across global trade shows and exhibitions</div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="trends" onclick="switchTab('trends')">Top Trends</button>
+      <button class="tab" data-tab="industries" onclick="switchTab('industries')">Industries</button>
+      <button class="tab" data-tab="regions" onclick="switchTab('regions')">Regions</button>
+      <button class="tab" data-tab="opportunities" onclick="switchTab('opportunities')">Opportunities</button>
+      <button class="tab" data-tab="shows" onclick="switchTab('shows')">Trade Shows</button>
+    </div>
+
+    <div id="panel-trends" class="panel"></div>
+    <div id="panel-industries" class="panel panel-hidden"></div>
+    <div id="panel-regions" class="panel panel-hidden"></div>
+    <div id="panel-opportunities" class="panel panel-hidden"></div>
+    <div id="panel-shows" class="panel panel-hidden"></div>
+  </main>
+</div>
+
+<script>
+// ── Embedded Data ────────────────────────────────────────────────────────────
+const TRENDS_DATA = [
+  {"id":"trend-001","rank":1,"name":"AI & Machine Learning","description":"Artificial intelligence and machine learning technologies are dominating trade show floors worldwide, with exhibitor counts surging 67% year-over-year. From industrial AI copilots at Hannover Messe to FDA-cleared diagnostic tools at HIMSS, AI is the defining cross-industry megatrend of 2026. Enterprise adoption is accelerating as edge AI chips, generative AI applications, and AI governance frameworks mature simultaneously.","lifecycle":"growing","composite_score":52.8,"confidence":0.82,"industries":["Technology & Electronics","Healthcare & Medical Devices","Manufacturing & Industrial","Automotive & Transportation","Telecommunications","Finance & Fintech","Retail & E-Commerce","Defense & Aerospace"],"regions":["North America","Europe","Asia-Pacific","Middle East & Africa"],"cross_industry":true,"scope":"Global","signal_count":8,"mention_count":14,"show_count":5,"keywords":["artificial intelligence","machine learning","generative AI","edge AI","AI chips","predictive maintenance","AI diagnostics","AI governance"],"velocity":0.42},
+  {"id":"trend-002","rank":2,"name":"Sustainability & Green Tech","description":"Sustainability has evolved from a niche category to a central organizing principle across trade shows. Hydrogen technology, renewable energy, circular economy solutions, and sustainable packaging are driving exhibitor growth at events spanning tech, food, energy, and construction. The convergence of regulatory mandates and commercial viability is accelerating the green transition across all industries.","lifecycle":"growing","composite_score":46.3,"confidence":0.75,"industries":["Energy & Sustainability","Technology & Electronics","Food & Beverage","Manufacturing & Industrial","Construction & Real Estate","Automotive & Transportation"],"regions":["North America","Europe","Middle East & Africa"],"cross_industry":true,"scope":"Global","signal_count":7,"mention_count":11,"show_count":5,"keywords":["sustainability","green hydrogen","renewable energy","circular economy","carbon neutral","sustainable packaging","energy transition","solar","wind energy"],"velocity":0.35},
+  {"id":"trend-003","rank":3,"name":"Robotics & Automation","description":"Robotics and automation are experiencing a breakthrough moment, with collaborative robots, humanoid robots, and autonomous mobile robots transforming manufacturing, logistics, and consumer markets. The convergence of AI capabilities with robotic hardware is enabling new applications from micro-assembly to warehouse automation, with adoption rates accelerating among small and mid-size manufacturers.","lifecycle":"growing","composite_score":41.7,"confidence":0.78,"industries":["Manufacturing & Industrial","Logistics & Supply Chain","Technology & Electronics","Agriculture & Farming","Healthcare & Medical Devices","Defense & Aerospace"],"regions":["North America","Europe","Asia-Pacific"],"cross_industry":true,"scope":"Global","signal_count":6,"mention_count":9,"show_count":4,"keywords":["collaborative robots","cobots","humanoid robots","AMR","warehouse automation","surgical robotics","autonomous delivery","precision automation"],"velocity":0.38},
+  {"id":"trend-004","rank":4,"name":"Electric & Autonomous Vehicles","description":"The electric and autonomous vehicle revolution is reshaping automotive trade shows globally, with Chinese EV manufacturers leading in model diversity and legacy OEMs pivoting to all-electric lineups. Level 3 autonomous driving is becoming standard in premium segments, while solid-state battery technology promises transformative range improvements. The EV aftermarket is emerging as a major new trade show category.","lifecycle":"growing","composite_score":38.2,"confidence":0.73,"industries":["Automotive & Transportation","Technology & Electronics","Energy & Sustainability","Logistics & Supply Chain"],"regions":["North America","Europe","Asia-Pacific"],"cross_industry":true,"scope":"Global","signal_count":5,"mention_count":8,"show_count":3,"keywords":["electric vehicles","autonomous driving","solid-state battery","EV charging","V2X","Level 3 autonomy","EV aftermarket","fleet electrification"],"velocity":0.33},
+  {"id":"trend-005","rank":5,"name":"Cybersecurity","description":"Cybersecurity has become a critical cross-industry theme at trade shows, driven by the expanding attack surface from 5G networks, IoT devices, and connected vehicles. Healthcare, defense, retail, and telecommunications sectors are all showing surging demand for security solutions. Post-quantum cryptography and AI-powered threat detection are emerging as the next frontier.","lifecycle":"growing","composite_score":34.5,"confidence":0.71,"industries":["Technology & Electronics","Telecommunications","Healthcare & Medical Devices","Defense & Aerospace","Retail & E-Commerce","Manufacturing & Industrial"],"regions":["North America","Europe","Middle East & Africa","Asia-Pacific"],"cross_industry":true,"scope":"Global","signal_count":5,"mention_count":7,"show_count":3,"keywords":["zero trust","5G security","post-quantum cryptography","cyber warfare","medical device security","payment security","OT/IT convergence"],"velocity":0.30},
+  {"id":"trend-006","rank":6,"name":"Digital Transformation","description":"Digital transformation continues as a mature but persistent theme, with Industry 4.0, smart retail, and digital construction workflows reaching mainstream adoption. IoT platforms, digital twins, and unified commerce architectures are no longer aspirational but operational at scale. The focus is shifting from adoption to optimization and integration.","lifecycle":"mature","composite_score":30.9,"confidence":0.65,"industries":["Retail & E-Commerce","Technology & Electronics","Telecommunications","Manufacturing & Industrial","Construction & Real Estate","Logistics & Supply Chain"],"regions":["North America","Europe","Middle East & Africa"],"cross_industry":true,"scope":"Global","signal_count":3,"mention_count":6,"show_count":3,"keywords":["digital twin","IoT","Industry 4.0","unified commerce","smart store","BIM","PropTech","supply chain digitalization"],"velocity":0.18},
+  {"id":"trend-007","rank":7,"name":"Health Tech & Biotech","description":"Health technology and biotechnology are converging at an unprecedented pace, with wearable monitoring, precision medicine, and mRNA therapeutics driving trade show growth. Interoperability standards are enabling new health data platforms, while point-of-care diagnostics are expanding healthcare access in emerging markets. The biotech-food convergence is creating entirely new product categories.","lifecycle":"growing","composite_score":29.4,"confidence":0.69,"industries":["Healthcare & Medical Devices","Technology & Electronics","Food & Beverage"],"regions":["North America","Europe","Middle East & Africa","Asia-Pacific"],"cross_industry":false,"scope":"Global","signal_count":4,"mention_count":6,"show_count":3,"keywords":["wearable health","precision medicine","mRNA therapeutics","point-of-care diagnostics","FHIR","telehealth","genomics","biotech"],"velocity":0.28},
+  {"id":"trend-008","rank":8,"name":"Supply Chain Innovation","description":"Supply chain innovation is being driven by resilience imperatives and technology enablement. Nearshoring solutions, blockchain-verified provenance, micro-fulfillment centers, and cold chain technology are reshaping logistics trade shows. Regional food security and supply chain diversification have become strategic priorities, particularly in the Middle East and Asia-Pacific.","lifecycle":"growing","composite_score":27.1,"confidence":0.62,"industries":["Logistics & Supply Chain","Manufacturing & Industrial","Retail & E-Commerce","Food & Beverage"],"regions":["North America","Europe","Asia-Pacific","Middle East & Africa"],"cross_industry":true,"scope":"Global","signal_count":5,"mention_count":5,"show_count":3,"keywords":["supply chain resilience","nearshoring","blockchain provenance","micro-fulfillment","cold chain","last-mile delivery","food traceability"],"velocity":0.25},
+  {"id":"trend-009","rank":9,"name":"Quantum Computing","description":"Quantum computing is transitioning from theoretical curiosity to commercial reality, with 1000+ qubit systems and practical error correction being demonstrated at major tech shows. Enterprise quantum-as-a-service platforms are reaching commercial availability, while quantum-safe communications are driving urgent infrastructure upgrades in telecommunications. The technology remains emerging but the pace of advancement is accelerating.","lifecycle":"emerging","composite_score":22.5,"confidence":0.55,"industries":["Technology & Electronics","Telecommunications","Finance & Fintech"],"regions":["North America","Europe","Asia-Pacific"],"cross_industry":true,"scope":"Global","signal_count":4,"mention_count":4,"show_count":2,"keywords":["quantum computing","qubit","error correction","quantum-as-a-service","post-quantum cryptography","quantum-safe","hybrid computing"],"velocity":0.40},
+  {"id":"trend-010","rank":10,"name":"Spatial Computing & XR","description":"Spatial computing and extended reality technologies are entering a new growth phase, driven by next-generation headsets from Apple, Meta, and Samsung. Enterprise adoption is expanding beyond gaming into manufacturing, field service, and healthcare rehabilitation. The convergence of 5G streaming capabilities with lighter hardware is removing adoption barriers, though the technology remains in early stages of mainstream penetration.","lifecycle":"emerging","composite_score":19.8,"confidence":0.48,"industries":["Technology & Electronics","Entertainment & Media","Telecommunications","Manufacturing & Industrial","Healthcare & Medical Devices"],"regions":["North America","Europe","Asia-Pacific"],"cross_industry":true,"scope":"Global","signal_count":4,"mention_count":4,"show_count":3,"keywords":["spatial computing","extended reality","XR","mixed reality","AR enterprise","industrial metaverse","cloud XR","VR rehabilitation"],"velocity":0.32}
+];
+
+const CYCLES_DATA = [
+  {"id":"cycle-001","timestamp":"2026-03-16T14:32:00Z","scan_type":"full","scope":"Full Scan","signal_count":47,"trend_count":10,"industries_covered":15,"regions_covered":5},
+  {"id":"cycle-002","timestamp":"2026-03-16T14:01:00Z","scan_type":"regional","scope":"Asia-Pacific","signal_count":18,"trend_count":7,"industries_covered":10,"regions_covered":1},
+  {"id":"cycle-003","timestamp":"2026-03-16T13:30:00Z","scan_type":"show_specific","scope":"CES 2026","signal_count":12,"trend_count":5,"industries_covered":6,"regions_covered":3}
+];
+
+const SHOWS_DATA = [
+  {"id":"show-001","name":"Consumer Electronics Show","short_name":"CES","industries":["Technology & Electronics","Automotive & Transportation","Entertainment & Media"],"region":"North America","city":"Las Vegas","country":"United States","frequency":"annual","tier":"global_flagship","typical_exhibitors":4400,"typical_attendees":180000,"next_date":"2026-01-06"},
+  {"id":"show-002","name":"Mobile World Congress","short_name":"MWC","industries":["Technology & Electronics","Telecommunications"],"region":"Europe","city":"Barcelona","country":"Spain","frequency":"annual","tier":"global_flagship","typical_exhibitors":2400,"typical_attendees":109000,"next_date":"2026-02-23"},
+  {"id":"show-003","name":"GITEX Technology Week","short_name":"GITEX","industries":["Technology & Electronics","Telecommunications","Finance & Fintech"],"region":"Middle East & Africa","city":"Dubai","country":"United Arab Emirates","frequency":"annual","tier":"regional_major","typical_exhibitors":5000,"typical_attendees":170000,"next_date":"2026-10-12"},
+  {"id":"show-004","name":"Computex Taipei","short_name":"Computex","industries":["Technology & Electronics","Manufacturing & Industrial"],"region":"Asia-Pacific","city":"Taipei","country":"Taiwan","frequency":"annual","tier":"global_flagship","typical_exhibitors":1600,"typical_attendees":46000,"next_date":"2026-06-02"},
+  {"id":"show-005","name":"Web Summit","short_name":"Web Summit","industries":["Technology & Electronics","Finance & Fintech","Entertainment & Media"],"region":"Europe","city":"Lisbon","country":"Portugal","frequency":"annual","tier":"global_flagship","typical_exhibitors":2600,"typical_attendees":71000,"next_date":"2026-11-02"},
+  {"id":"show-006","name":"Collision Conference","short_name":"Collision","industries":["Technology & Electronics","Finance & Fintech"],"region":"North America","city":"Toronto","country":"Canada","frequency":"annual","tier":"regional_major","typical_exhibitors":1500,"typical_attendees":36000,"next_date":"2026-06-22"},
+  {"id":"show-007","name":"CEATEC Japan","short_name":"CEATEC","industries":["Technology & Electronics","Manufacturing & Industrial"],"region":"Asia-Pacific","city":"Chiba","country":"Japan","frequency":"annual","tier":"regional_major","typical_exhibitors":800,"typical_attendees":80000,"next_date":"2026-10-20"},
+  {"id":"show-008","name":"MEDICA World Forum for Medicine","short_name":"MEDICA","industries":["Healthcare & Medical Devices","Technology & Electronics"],"region":"Europe","city":"Dusseldorf","country":"Germany","frequency":"annual","tier":"global_flagship","typical_exhibitors":5100,"typical_attendees":81000,"next_date":"2026-11-16"},
+  {"id":"show-009","name":"HIMSS Global Health Conference","short_name":"HIMSS","industries":["Healthcare & Medical Devices","Technology & Electronics"],"region":"North America","city":"Las Vegas","country":"United States","frequency":"annual","tier":"global_flagship","typical_exhibitors":1300,"typical_attendees":45000,"next_date":"2026-03-09"},
+  {"id":"show-010","name":"Arab Health","short_name":"Arab Health","industries":["Healthcare & Medical Devices"],"region":"Middle East & Africa","city":"Dubai","country":"United Arab Emirates","frequency":"annual","tier":"regional_major","typical_exhibitors":4200,"typical_attendees":55000,"next_date":"2026-01-26"},
+  {"id":"show-011","name":"Florida International Medical Expo","short_name":"FIME","industries":["Healthcare & Medical Devices"],"region":"North America","city":"Miami","country":"United States","frequency":"annual","tier":"regional_major","typical_exhibitors":1200,"typical_attendees":22000,"next_date":"2026-06-17"},
+  {"id":"show-012","name":"Medical Fair Asia","short_name":"Medical Fair Asia","industries":["Healthcare & Medical Devices"],"region":"Asia-Pacific","city":"Singapore","country":"Singapore","frequency":"biennial","tier":"regional_major","typical_exhibitors":900,"typical_attendees":14000,"next_date":"2026-08-26"},
+  {"id":"show-013","name":"BIO International Convention","short_name":"BIO","industries":["Healthcare & Medical Devices","Agriculture & Farming"],"region":"North America","city":"Boston","country":"United States","frequency":"annual","tier":"global_flagship","typical_exhibitors":1800,"typical_attendees":18000,"next_date":"2026-06-08"},
+  {"id":"show-014","name":"Auto Shanghai","short_name":"Auto Shanghai","industries":["Automotive & Transportation","Technology & Electronics"],"region":"Asia-Pacific","city":"Shanghai","country":"China","frequency":"biennial","tier":"global_flagship","typical_exhibitors":2000,"typical_attendees":810000,"next_date":"2027-04-19"},
+  {"id":"show-015","name":"IAA Mobility","short_name":"IAA","industries":["Automotive & Transportation","Technology & Electronics","Energy & Sustainability"],"region":"Europe","city":"Munich","country":"Germany","frequency":"biennial","tier":"global_flagship","typical_exhibitors":750,"typical_attendees":560000,"next_date":"2027-09-06"},
+  {"id":"show-016","name":"North American International Auto Show","short_name":"Detroit Auto Show","industries":["Automotive & Transportation"],"region":"North America","city":"Detroit","country":"United States","frequency":"annual","tier":"global_flagship","typical_exhibitors":500,"typical_attendees":600000,"next_date":"2027-01-11"},
+  {"id":"show-017","name":"AAPEX - Automotive Aftermarket Products Expo","short_name":"AAPEX","industries":["Automotive & Transportation"],"region":"North America","city":"Las Vegas","country":"United States","frequency":"annual","tier":"regional_major","typical_exhibitors":2500,"typical_attendees":54000,"next_date":"2026-11-03"},
+  {"id":"show-018","name":"SEMA Show","short_name":"SEMA","industries":["Automotive & Transportation","Manufacturing & Industrial"],"region":"North America","city":"Las Vegas","country":"United States","frequency":"annual","tier":"global_flagship","typical_exhibitors":2400,"typical_attendees":162000,"next_date":"2026-11-03"},
+  {"id":"show-019","name":"Automechanika Frankfurt","short_name":"Automechanika","industries":["Automotive & Transportation","Manufacturing & Industrial"],"region":"Europe","city":"Frankfurt","country":"Germany","frequency":"biennial","tier":"global_flagship","typical_exhibitors":4800,"typical_attendees":136000,"next_date":"2026-09-08"},
+  {"id":"show-020","name":"SIAL Paris","short_name":"SIAL Paris","industries":["Food & Beverage"],"region":"Europe","city":"Paris","country":"France","frequency":"biennial","tier":"global_flagship","typical_exhibitors":7200,"typical_attendees":310000,"next_date":"2026-10-17"},
+  {"id":"show-021","name":"Anuga","short_name":"Anuga","industries":["Food & Beverage"],"region":"Europe","city":"Cologne","country":"Germany","frequency":"biennial","tier":"global_flagship","typical_exhibitors":7500,"typical_attendees":170000,"next_date":"2027-10-09"},
+  {"id":"show-022","name":"Gulfood","short_name":"Gulfood","industries":["Food & Beverage"],"region":"Middle East & Africa","city":"Dubai","country":"United Arab Emirates","frequency":"annual","tier":"global_flagship","typical_exhibitors":5000,"typical_attendees":100000,"next_date":"2026-02-17"},
+  {"id":"show-023","name":"Natural Products Expo West","short_name":"Natural Products Expo","industries":["Food & Beverage","Healthcare & Medical Devices"],"region":"North America","city":"Anaheim","country":"United States","frequency":"annual","tier":"regional_major","typical_exhibitors":3600,"typical_attendees":86000,"next_date":"2026-03-03"},
+  {"id":"show-024","name":"Food & Hotel Asia","short_name":"FHA Singapore","industries":["Food & Beverage"],"region":"Asia-Pacific","city":"Singapore","country":"Singapore","frequency":"biennial","tier":"regional_major","typical_exhibitors":4000,"typical_attendees":73000,"next_date":"2026-10-25"},
+  {"id":"show-025","name":"Hannover Messe","short_name":"Hannover Messe","industries":["Manufacturing & Industrial","Technology & Electronics","Energy & Sustainability"],"region":"Europe","city":"Hanover","country":"Germany","frequency":"annual","tier":"global_flagship","typical_exhibitors":5000,"typical_attendees":130000,"next_date":"2026-04-20"},
+  {"id":"show-026","name":"International Manufacturing Technology Show","short_name":"IMTS","industries":["Manufacturing & Industrial","Technology & Electronics"],"region":"North America","city":"Chicago","country":"United States","frequency":"biennial","tier":"global_flagship","typical_exhibitors":2500,"typical_attendees":130000,"next_date":"2026-09-14"},
+  {"id":"show-027","name":"EMO Hannover","short_name":"EMO","industries":["Manufacturing & Industrial"],"region":"Europe","city":"Hanover","country":"Germany","frequency":"biennial","tier":"global_flagship","typical_exhibitors":2200,"typical_attendees":117000,"next_date":"2027-09-20"},
+  {"id":"show-028","name":"Canton Fair","short_name":"Canton Fair","industries":["Manufacturing & Industrial","Retail & E-Commerce","Technology & Electronics"],"region":"Asia-Pacific","city":"Guangzhou","country":"China","frequency":"biannual","tier":"global_flagship","typical_exhibitors":26000,"typical_attendees":200000,"next_date":"2026-04-15"},
+  {"id":"show-029","name":"Japan International Machine Tool Fair","short_name":"JIMTOF","industries":["Manufacturing & Industrial"],"region":"Asia-Pacific","city":"Tokyo","country":"Japan","frequency":"biennial","tier":"regional_major","typical_exhibitors":850,"typical_attendees":140000,"next_date":"2026-11-05"},
+  {"id":"show-030","name":"NRF Retail's Big Show","short_name":"NRF","industries":["Retail & E-Commerce","Technology & Electronics"],"region":"North America","city":"New York","country":"United States","frequency":"annual","tier":"global_flagship","typical_exhibitors":1000,"typical_attendees":40000,"next_date":"2026-01-11"},
+  {"id":"show-031","name":"EuroShop","short_name":"EuroShop","industries":["Retail & E-Commerce","Technology & Electronics"],"region":"Europe","city":"Dusseldorf","country":"Germany","frequency":"triennial","tier":"global_flagship","typical_exhibitors":2300,"typical_attendees":94000,"next_date":"2026-02-22"},
+  {"id":"show-032","name":"Shoptalk","short_name":"Shoptalk","industries":["Retail & E-Commerce","Technology & Electronics"],"region":"North America","city":"Las Vegas","country":"United States","frequency":"annual","tier":"regional_major","typical_exhibitors":600,"typical_attendees":10000,"next_date":"2026-03-15"},
+  {"id":"show-033","name":"World of Concrete","short_name":"World of Concrete","industries":["Construction & Real Estate","Manufacturing & Industrial"],"region":"North America","city":"Las Vegas","country":"United States","frequency":"annual","tier":"regional_major","typical_exhibitors":1500,"typical_attendees":60000,"next_date":"2026-01-19"},
+  {"id":"show-034","name":"bauma","short_name":"bauma","industries":["Construction & Real Estate","Manufacturing & Industrial"],"region":"Europe","city":"Munich","country":"Germany","frequency":"triennial","tier":"global_flagship","typical_exhibitors":3700,"typical_attendees":620000,"next_date":"2028-04-03"},
+  {"id":"show-035","name":"The Big 5","short_name":"Big 5","industries":["Construction & Real Estate"],"region":"Middle East & Africa","city":"Dubai","country":"United Arab Emirates","frequency":"annual","tier":"regional_major","typical_exhibitors":2200,"typical_attendees":64000,"next_date":"2026-11-23"},
+  {"id":"show-036","name":"CONEXPO-CON/AGG","short_name":"CONEXPO","industries":["Construction & Real Estate","Manufacturing & Industrial"],"region":"North America","city":"Las Vegas","country":"United States","frequency":"triennial","tier":"global_flagship","typical_exhibitors":2800,"typical_attendees":139000,"next_date":"2026-03-10"},
+  {"id":"show-037","name":"AUSA Annual Meeting","short_name":"AUSA","industries":["Defense & Aerospace","Technology & Electronics"],"region":"North America","city":"Washington D.C.","country":"United States","frequency":"annual","tier":"regional_major","typical_exhibitors":700,"typical_attendees":30000,"next_date":"2026-10-12"},
+  {"id":"show-038","name":"Defence & Security Equipment International","short_name":"DSEI","industries":["Defense & Aerospace","Technology & Electronics"],"region":"Europe","city":"London","country":"United Kingdom","frequency":"biennial","tier":"global_flagship","typical_exhibitors":1700,"typical_attendees":36000,"next_date":"2027-09-14"},
+  {"id":"show-039","name":"International Defence Exhibition","short_name":"IDEX","industries":["Defense & Aerospace"],"region":"Middle East & Africa","city":"Abu Dhabi","country":"United Arab Emirates","frequency":"biennial","tier":"global_flagship","typical_exhibitors":1400,"typical_attendees":105000,"next_date":"2027-02-21"},
+  {"id":"show-040","name":"Eurosatory","short_name":"Eurosatory","industries":["Defense & Aerospace"],"region":"Europe","city":"Paris","country":"France","frequency":"biennial","tier":"global_flagship","typical_exhibitors":1800,"typical_attendees":57000,"next_date":"2026-06-15"},
+  {"id":"show-041","name":"Singapore Airshow","short_name":"Singapore Airshow","industries":["Defense & Aerospace","Technology & Electronics"],"region":"Asia-Pacific","city":"Singapore","country":"Singapore","frequency":"biennial","tier":"global_flagship","typical_exhibitors":1000,"typical_attendees":54000,"next_date":"2026-02-10"},
+  {"id":"show-042","name":"Abu Dhabi International Petroleum Exhibition","short_name":"ADIPEC","industries":["Energy & Sustainability"],"region":"Middle East & Africa","city":"Abu Dhabi","country":"United Arab Emirates","frequency":"annual","tier":"global_flagship","typical_exhibitors":2200,"typical_attendees":160000,"next_date":"2026-11-09"},
+  {"id":"show-043","name":"Solar Power International","short_name":"Solar Power International","industries":["Energy & Sustainability","Technology & Electronics"],"region":"North America","city":"Anaheim","country":"United States","frequency":"annual","tier":"regional_major","typical_exhibitors":1000,"typical_attendees":28000,"next_date":"2026-09-14"},
+  {"id":"show-044","name":"WindEnergy Hamburg","short_name":"WindEnergy Hamburg","industries":["Energy & Sustainability"],"region":"Europe","city":"Hamburg","country":"Germany","frequency":"biennial","tier":"global_flagship","typical_exhibitors":1400,"typical_attendees":40000,"next_date":"2026-09-22"},
+  {"id":"show-045","name":"LogiMAT","short_name":"LogiMAT","industries":["Logistics & Supply Chain","Manufacturing & Industrial"],"region":"Europe","city":"Stuttgart","country":"Germany","frequency":"annual","tier":"regional_major","typical_exhibitors":1600,"typical_attendees":66000,"next_date":"2026-03-10"},
+  {"id":"show-046","name":"MODEX","short_name":"MODEX","industries":["Logistics & Supply Chain","Manufacturing & Industrial"],"region":"North America","city":"Atlanta","country":"United States","frequency":"biennial","tier":"regional_major","typical_exhibitors":1000,"typical_attendees":45000,"next_date":"2026-03-23"},
+  {"id":"show-047","name":"transport logistic","short_name":"Transport Logistic","industries":["Logistics & Supply Chain"],"region":"Europe","city":"Munich","country":"Germany","frequency":"biennial","tier":"global_flagship","typical_exhibitors":2300,"typical_attendees":64000,"next_date":"2027-05-04"}
+];
+
+// ── Derived data ─────────────────────────────────────────────────────────────
+const allIndustries = [...new Set(TRENDS_DATA.flatMap(t => t.industries))].sort();
+const allRegions = [...new Set(TRENDS_DATA.flatMap(t => t.regions))].sort();
+
+// ── State ────────────────────────────────────────────────────────────────────
+let currentTab = 'trends';
+let filterIndustry = '';
+let filterRegion = '';
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+function init() {
+  const industrySelect = document.getElementById('industryFilter');
+  allIndustries.forEach(ind => {
+    const opt = document.createElement('option');
+    opt.value = ind;
+    opt.textContent = ind;
+    industrySelect.appendChild(opt);
+  });
+
+  const regionSelect = document.getElementById('regionFilter');
+  allRegions.forEach(reg => {
+    const opt = document.createElement('option');
+    opt.value = reg;
+    opt.textContent = reg;
+    regionSelect.appendChild(opt);
+  });
+
+  industrySelect.addEventListener('change', applyFilters);
+  regionSelect.addEventListener('change', applyFilters);
+
+  renderAll();
+}
+
+function getFilteredTrends() {
+  filterIndustry = document.getElementById('industryFilter').value;
+  filterRegion = document.getElementById('regionFilter').value;
+  let filtered = TRENDS_DATA;
+  if (filterIndustry) {
+    filtered = filtered.filter(t => t.industries.includes(filterIndustry));
+  }
+  if (filterRegion) {
+    filtered = filtered.filter(t => t.regions.includes(filterRegion));
+  }
+  return filtered;
+}
+
+function applyFilters() {
+  renderAll();
+}
+
+function resetFilters() {
+  document.getElementById('industryFilter').value = '';
+  document.getElementById('regionFilter').value = '';
+  document.getElementById('showFilter').value = '';
+  renderAll();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.add('panel-hidden'));
+  document.getElementById(`panel-${tab}`).classList.remove('panel-hidden');
+}
+
+function getScoreClass(score) {
+  if (score >= 40) return 'score-high';
+  if (score >= 25) return 'score-medium';
+  return 'score-low';
+}
+
+function formatNumber(n) {
+  if (n >= 1000) return (n / 1000).toFixed(0) + 'k';
+  return n.toString();
+}
+
+// ── Render All Panels ────────────────────────────────────────────────────────
+function renderAll() {
+  renderTrends();
+  renderIndustries();
+  renderRegions();
+  renderOpportunities();
+  renderShows();
+}
+
+// ── Trends Panel ─────────────────────────────────────────────────────────────
+function renderTrends() {
+  const trends = getFilteredTrends();
+  const container = document.getElementById('panel-trends');
+
+  if (trends.length === 0) {
+    container.innerHTML = '<div class="no-results">No trends match the current filters.</div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="trend-list">' + trends.map(t => {
+    const scoreClass = getScoreClass(t.composite_score);
+    const lifecycleCapitalized = t.lifecycle.charAt(0).toUpperCase() + t.lifecycle.slice(1);
+
+    let tagsHtml = `<span class="tag tag-lifecycle ${t.lifecycle}">${lifecycleCapitalized}</span>`;
+    if (t.cross_industry) {
+      tagsHtml += '<span class="tag tag-cross-industry">Cross-Industry</span>';
+    }
+    tagsHtml += `<span class="tag tag-scope">${t.scope}</span>`;
+    t.industries.slice(0, 3).forEach(ind => {
+      tagsHtml += `<span class="tag tag-industry">${ind}</span>`;
+    });
+    if (t.industries.length > 3) {
+      tagsHtml += `<span class="tag tag-industry">+${t.industries.length - 3} more</span>`;
+    }
+    t.regions.slice(0, 2).forEach(reg => {
+      tagsHtml += `<span class="tag tag-region">${reg}</span>`;
+    });
+    if (t.regions.length > 2) {
+      tagsHtml += `<span class="tag tag-region">+${t.regions.length - 2} more</span>`;
+    }
+
+    const keywordsHtml = t.keywords.slice(0, 5).map(k =>
+      `<span class="keyword">${k}</span>`
+    ).join('');
+
+    return `
+      <div class="trend-card">
+        <div class="trend-card-header">
+          <span class="trend-rank">#${t.rank}</span>
+          <span class="trend-name">${t.name}</span>
+          <span class="trend-score ${scoreClass}">${t.composite_score.toFixed(1)}</span>
+        </div>
+        <div class="trend-tags">${tagsHtml}</div>
+        <div class="trend-description">${t.description}</div>
+        <div class="trend-meta">
+          <span class="trend-meta-left">${t.mention_count} mentions across ${t.show_count} events &middot; Confidence: ${Math.round(t.confidence * 100)}%</span>
+          <div class="trend-keywords">${keywordsHtml}</div>
+        </div>
+      </div>
+    `;
+  }).join('') + '</div>';
+}
+
+// ── Industries Panel ─────────────────────────────────────────────────────────
+function renderIndustries() {
+  const trends = getFilteredTrends();
+  const industryMap = {};
+
+  trends.forEach(t => {
+    t.industries.forEach(ind => {
+      if (!industryMap[ind]) industryMap[ind] = [];
+      industryMap[ind].push(t);
+    });
+  });
+
+  const sorted = Object.entries(industryMap).sort((a, b) => b[1].length - a[1].length);
+  const container = document.getElementById('panel-industries');
+
+  if (sorted.length === 0) {
+    container.innerHTML = '<div class="no-results">No industries match the current filters.</div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="industry-grid">' + sorted.map(([name, indTrends]) => {
+    const topTrends = indTrends.sort((a, b) => b.composite_score - a.composite_score).slice(0, 5);
+    return `
+      <div class="industry-card">
+        <div class="industry-card-header">
+          <span class="industry-card-name">${name}</span>
+          <span class="industry-card-count">${indTrends.length} trends</span>
+        </div>
+        <div class="industry-card-trends">
+          ${topTrends.map(t => `
+            <div class="industry-trend-item">
+              <span class="industry-trend-name">${t.name}</span>
+              <span class="industry-trend-score ${getScoreClass(t.composite_score)}">${t.composite_score.toFixed(1)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('') + '</div>';
+}
+
+// ── Regions Panel ────────────────────────────────────────────────────────────
+function renderRegions() {
+  const trends = getFilteredTrends();
+  const regionMap = {};
+
+  trends.forEach(t => {
+    t.regions.forEach(reg => {
+      if (!regionMap[reg]) regionMap[reg] = [];
+      regionMap[reg].push(t);
+    });
+  });
+
+  const sorted = Object.entries(regionMap).sort((a, b) => b[1].length - a[1].length);
+  const container = document.getElementById('panel-regions');
+
+  if (sorted.length === 0) {
+    container.innerHTML = '<div class="no-results">No regions match the current filters.</div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="region-grid">' + sorted.map(([name, regTrends]) => {
+    const ranked = regTrends.sort((a, b) => b.composite_score - a.composite_score);
+    return `
+      <div class="region-card">
+        <div class="region-card-header">
+          <span class="region-card-name">${name}</span>
+          <span class="region-card-count">${regTrends.length} trends</span>
+        </div>
+        <div>
+          ${ranked.map((t, i) => `
+            <div class="region-trend-item">
+              <span class="region-trend-rank">${i + 1}.</span>
+              <span class="region-trend-name">${t.name}</span>
+              <span class="region-trend-score ${getScoreClass(t.composite_score)}">${t.composite_score.toFixed(1)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('') + '</div>';
+}
+
+// ── Opportunities Panel ──────────────────────────────────────────────────────
+function renderOpportunities() {
+  const trends = getFilteredTrends();
+  const opportunities = [];
+
+  trends.forEach(t => {
+    if (t.lifecycle === 'emerging') {
+      opportunities.push({
+        type: 'whitespace',
+        typeLabel: 'Whitespace',
+        name: `Early-Mover Advantage: ${t.name}`,
+        description: `${t.name} is in the emerging phase with a composite score of ${t.composite_score.toFixed(1)} and velocity of ${(t.velocity * 100).toFixed(0)}%. Early positioning at trade shows can establish thought leadership before mainstream adoption. ${t.description.split('.').slice(0, 2).join('.')}.`,
+        tags: t.industries.slice(0, 3),
+        score: t.composite_score
+      });
+    }
+    if (t.cross_industry) {
+      opportunities.push({
+        type: 'convergence',
+        typeLabel: 'Convergence',
+        name: `Cross-Industry Convergence: ${t.name}`,
+        description: `${t.name} spans ${t.industries.length} industries and ${t.regions.length} regions, creating convergence opportunities at multi-sector trade shows. Companies bridging ${t.industries[0]} and ${t.industries[1]} can differentiate through integrated solutions.`,
+        tags: t.industries.slice(0, 3),
+        score: t.composite_score
+      });
+    }
+    if (t.lifecycle === 'growing' && t.composite_score >= 30) {
+      opportunities.push({
+        type: 'acceleration',
+        typeLabel: 'Acceleration',
+        name: `Accelerating Momentum: ${t.name}`,
+        description: `${t.name} is experiencing strong growth with a score of ${t.composite_score.toFixed(1)} and ${t.mention_count} mentions across ${t.show_count} events. The velocity of ${(t.velocity * 100).toFixed(0)}% indicates sustained acceleration, making this a prime opportunity for increased trade show investment.`,
+        tags: t.industries.slice(0, 3),
+        score: t.composite_score
+      });
+    }
+  });
+
+  opportunities.sort((a, b) => b.score - a.score);
+
+  const container = document.getElementById('panel-opportunities');
+  if (opportunities.length === 0) {
+    container.innerHTML = '<div class="no-results">No opportunities match the current filters.</div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="opportunity-list">' + opportunities.map(o => `
+    <div class="opportunity-card">
+      <div class="opportunity-header">
+        <span class="opportunity-type ${o.type}">${o.typeLabel}</span>
+        <span class="opportunity-name">${o.name}</span>
+      </div>
+      <div class="opportunity-description">${o.description}</div>
+      <div class="opportunity-meta">
+        ${o.tags.map(tag => `<span class="tag tag-industry">${tag}</span>`).join('')}
+      </div>
+    </div>
+  `).join('') + '</div>';
+}
+
+// ── Trade Shows Panel ────────────────────────────────────────────────────────
+function renderShows() {
+  let shows = SHOWS_DATA;
+  const filterInd = document.getElementById('industryFilter').value;
+  const filterReg = document.getElementById('regionFilter').value;
+  const filterShow = document.getElementById('showFilter').value.trim().toLowerCase();
+
+  if (filterInd) {
+    shows = shows.filter(s => s.industries.includes(filterInd));
+  }
+  if (filterReg) {
+    shows = shows.filter(s => s.region === filterReg);
+  }
+  if (filterShow) {
+    shows = shows.filter(s =>
+      s.name.toLowerCase().includes(filterShow) ||
+      s.short_name.toLowerCase().includes(filterShow)
+    );
+  }
+
+  const container = document.getElementById('panel-shows');
+  if (shows.length === 0) {
+    container.innerHTML = '<div class="no-results">No trade shows match the current filters.</div>';
+    return;
+  }
+
+  container.innerHTML = '<div class="show-grid">' + shows.map(s => {
+    const tierLabel = s.tier === 'global_flagship' ? 'Global Flagship' : 'Regional Major';
+    return `
+      <div class="show-card">
+        <div class="show-card-header">
+          <span class="show-card-name">${s.name}</span>
+          <span class="show-card-short">${s.short_name}</span>
+        </div>
+        <div class="show-card-location">${s.city}, ${s.country}</div>
+        <div class="show-card-meta">
+          <span class="show-tier ${s.tier}">${tierLabel}</span>
+          <span>${formatNumber(s.typical_exhibitors)} exhibitors</span>
+          <span>${formatNumber(s.typical_attendees)} attendees</span>
+          <span>${s.frequency}</span>
+        </div>
+        <div class="show-card-tags">
+          ${s.industries.map(ind => `<span class="tag tag-industry">${ind}</span>`).join('')}
+        </div>
+      </div>
+    `;
+  }).join('') + '</div>';
+}
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
