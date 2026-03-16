@@ -1,0 +1,1868 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Trade Show Trend Analysis API",
+    "description": "REST API for the Trade Show Trend Intelligence platform. Serves trend data, signals, trade shows, media assets, and analysis controls. Designed for consumption by any frontend (Lovable, React, mobile).",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health Check V1",
+        "description": "Check API health, version, data counts, and scraper status.",
+        "operationId": "health_check_v1_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/trends": {
+      "get": {
+        "tags": [
+          "Trends"
+        ],
+        "summary": "List Trends V1",
+        "description": "List all trends, optionally filtered by industry, region, or cycle.",
+        "operationId": "list_trends_v1_api_v1_trends_get",
+        "parameters": [
+          {
+            "name": "industry",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by industry name",
+              "title": "Industry"
+            },
+            "description": "Filter by industry name"
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by region name",
+              "title": "Region"
+            },
+            "description": "Filter by region name"
+          },
+          {
+            "name": "cycle_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by analysis cycle ID",
+              "title": "Cycle Id"
+            },
+            "description": "Filter by analysis cycle ID"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Page number (omit for all)",
+              "title": "Page"
+            },
+            "description": "Page number (omit for all)"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Items per page",
+              "title": "Page Size"
+            },
+            "description": "Items per page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrendListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/trends/{trend_id}": {
+      "get": {
+        "tags": [
+          "Trends"
+        ],
+        "summary": "Get Trend V1",
+        "description": "Get a single trend by ID.",
+        "operationId": "get_trend_v1_api_v1_trends__trend_id__get",
+        "parameters": [
+          {
+            "name": "trend_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Trend Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrendResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/trends/{trend_id}/media": {
+      "get": {
+        "tags": [
+          "Trends"
+        ],
+        "summary": "Get Trend Media V1",
+        "description": "Get media assets associated with a trend.",
+        "operationId": "get_trend_media_v1_api_v1_trends__trend_id__media_get",
+        "parameters": [
+          {
+            "name": "trend_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Trend Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/signals": {
+      "get": {
+        "tags": [
+          "Signals"
+        ],
+        "summary": "List Signals V1",
+        "description": "List all signals, optionally filtered.",
+        "operationId": "list_signals_v1_api_v1_signals_get",
+        "parameters": [
+          {
+            "name": "industry",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by industry name",
+              "title": "Industry"
+            },
+            "description": "Filter by industry name"
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by region name",
+              "title": "Region"
+            },
+            "description": "Filter by region name"
+          },
+          {
+            "name": "trend_category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by trend category",
+              "title": "Trend Category"
+            },
+            "description": "Filter by trend category"
+          },
+          {
+            "name": "cycle_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by analysis cycle ID",
+              "title": "Cycle Id"
+            },
+            "description": "Filter by analysis cycle ID"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/shows": {
+      "get": {
+        "tags": [
+          "Trade Shows"
+        ],
+        "summary": "List Shows V1",
+        "description": "List all trade shows, optionally filtered.",
+        "operationId": "list_shows_v1_api_v1_shows_get",
+        "parameters": [
+          {
+            "name": "industry",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by industry name",
+              "title": "Industry"
+            },
+            "description": "Filter by industry name"
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by region name",
+              "title": "Region"
+            },
+            "description": "Filter by region name"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 100,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShowListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/shows/{show_id}/media": {
+      "get": {
+        "tags": [
+          "Trade Shows"
+        ],
+        "summary": "Get Show Media V1",
+        "description": "Get media assets associated with a trade show.",
+        "operationId": "get_show_media_v1_api_v1_shows__show_id__media_get",
+        "parameters": [
+          {
+            "name": "show_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Show Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cycles": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "List Cycles V1",
+        "description": "List all analysis cycles (run history).",
+        "operationId": "list_cycles_v1_api_v1_cycles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CycleListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/industries": {
+      "get": {
+        "tags": [
+          "Metadata"
+        ],
+        "summary": "List Industries V1",
+        "description": "List all unique industries across trends, signals, and shows.",
+        "operationId": "list_industries_v1_api_v1_industries_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndustryListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/regions": {
+      "get": {
+        "tags": [
+          "Metadata"
+        ],
+        "summary": "List Regions V1",
+        "description": "List all unique regions across trends, signals, and shows.",
+        "operationId": "list_regions_v1_api_v1_regions_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegionListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats": {
+      "get": {
+        "tags": [
+          "Metadata"
+        ],
+        "summary": "Get Stats V1",
+        "description": "Get aggregate statistics for the dashboard overview.",
+        "operationId": "get_stats_v1_api_v1_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/media": {
+      "get": {
+        "tags": [
+          "Media"
+        ],
+        "summary": "List Media V1",
+        "description": "List media assets (photos, videos, thumbnails) with optional filters.",
+        "operationId": "list_media_v1_api_v1_media_get",
+        "parameters": [
+          {
+            "name": "trade_show",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by trade show short name",
+              "title": "Trade Show"
+            },
+            "description": "Filter by trade show short name"
+          },
+          {
+            "name": "trend_category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by trend category",
+              "title": "Trend Category"
+            },
+            "description": "Filter by trend category"
+          },
+          {
+            "name": "media_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by media type",
+              "title": "Media Type"
+            },
+            "description": "Filter by media type"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 200,
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analyze": {
+      "post": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Run Analysis V1",
+        "description": "Run an analysis cycle: filter signals and return current trends.",
+        "operationId": "run_analysis_v1_api_v1_analyze_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyzeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scrape": {
+      "post": {
+        "tags": [
+          "Scraping"
+        ],
+        "summary": "Trigger Scrape V1",
+        "description": "Trigger a data collection cycle (RSS, YouTube, web scraping).",
+        "operationId": "trigger_scrape_v1_api_v1_scrape_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScrapeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/scrape/status": {
+      "get": {
+        "tags": [
+          "Scraping"
+        ],
+        "summary": "Scrape Status V1",
+        "description": "Check the status of the last/current scrape operation.",
+        "operationId": "scrape_status_v1_api_v1_scrape_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScrapeStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnalyzeRequest": {
+        "properties": {
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope",
+            "default": "Full Scan"
+          },
+          "industry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Industry"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Region"
+          },
+          "show": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Show"
+          }
+        },
+        "type": "object",
+        "title": "AnalyzeRequest"
+      },
+      "AnalyzeResponse": {
+        "properties": {
+          "cycle": {
+            "$ref": "#/components/schemas/CycleResponse"
+          },
+          "trends": {
+            "items": {
+              "$ref": "#/components/schemas/TrendResponse"
+            },
+            "type": "array",
+            "title": "Trends"
+          },
+          "signal_count": {
+            "type": "integer",
+            "title": "Signal Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cycle",
+          "trends",
+          "signal_count"
+        ],
+        "title": "AnalyzeResponse"
+      },
+      "CycleListResponse": {
+        "properties": {
+          "cycles": {
+            "items": {
+              "$ref": "#/components/schemas/CycleResponse"
+            },
+            "type": "array",
+            "title": "Cycles"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cycles",
+          "count"
+        ],
+        "title": "CycleListResponse"
+      },
+      "CycleResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp",
+            "default": ""
+          },
+          "scan_type": {
+            "type": "string",
+            "title": "Scan Type",
+            "default": ""
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": ""
+          },
+          "signal_count": {
+            "type": "integer",
+            "title": "Signal Count",
+            "default": 0
+          },
+          "trend_count": {
+            "type": "integer",
+            "title": "Trend Count",
+            "default": 0
+          },
+          "industries_covered": {
+            "type": "integer",
+            "title": "Industries Covered",
+            "default": 0
+          },
+          "regions_covered": {
+            "type": "integer",
+            "title": "Regions Covered",
+            "default": 0
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version",
+            "default": ""
+          },
+          "predictions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Predictions"
+          },
+          "eval_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eval Score"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "CycleResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "api_version": {
+            "type": "string",
+            "title": "Api Version"
+          },
+          "timestamp": {
+            "type": "string",
+            "title": "Timestamp"
+          },
+          "data_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Data Counts"
+          },
+          "scraper_status": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Scraper Status"
+          },
+          "uptime_seconds": {
+            "type": "integer",
+            "title": "Uptime Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "api_version",
+          "timestamp",
+          "data_counts",
+          "scraper_status",
+          "uptime_seconds"
+        ],
+        "title": "HealthResponse"
+      },
+      "IndustryListResponse": {
+        "properties": {
+          "industries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Industries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "industries"
+        ],
+        "title": "IndustryListResponse"
+      },
+      "MediaAssetResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "default": ""
+          },
+          "thumbnail_url": {
+            "type": "string",
+            "title": "Thumbnail Url",
+            "default": ""
+          },
+          "media_type": {
+            "type": "string",
+            "title": "Media Type",
+            "default": ""
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "default": ""
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url",
+            "default": ""
+          },
+          "caption": {
+            "type": "string",
+            "title": "Caption",
+            "default": ""
+          },
+          "trade_shows": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Trade Shows"
+          },
+          "industries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Industries"
+          },
+          "trend_categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Trend Categories"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "width": {
+            "type": "integer",
+            "title": "Width",
+            "default": 0
+          },
+          "height": {
+            "type": "integer",
+            "title": "Height",
+            "default": 0
+          },
+          "fetched_at": {
+            "type": "string",
+            "title": "Fetched At",
+            "default": ""
+          },
+          "cycle_id": {
+            "type": "string",
+            "title": "Cycle Id",
+            "default": ""
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "MediaAssetResponse"
+      },
+      "MediaListResponse": {
+        "properties": {
+          "media": {
+            "items": {
+              "$ref": "#/components/schemas/MediaAssetResponse"
+            },
+            "type": "array",
+            "title": "Media"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "page_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Size"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "media",
+          "count"
+        ],
+        "title": "MediaListResponse"
+      },
+      "RegionListResponse": {
+        "properties": {
+          "regions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Regions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "regions"
+        ],
+        "title": "RegionListResponse"
+      },
+      "ScrapeRequest": {
+        "properties": {
+          "offline": {
+            "type": "boolean",
+            "title": "Offline",
+            "default": true
+          },
+          "max_results": {
+            "type": "integer",
+            "title": "Max Results",
+            "default": 50
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": "Full Scan"
+          }
+        },
+        "type": "object",
+        "title": "ScrapeRequest"
+      },
+      "ScrapeResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ScrapeResponse"
+      },
+      "ScrapeStatusResponse": {
+        "properties": {
+          "running": {
+            "type": "boolean",
+            "title": "Running"
+          },
+          "last_result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Result"
+          }
+        },
+        "type": "object",
+        "required": [
+          "running"
+        ],
+        "title": "ScrapeStatusResponse"
+      },
+      "ShowListResponse": {
+        "properties": {
+          "shows": {
+            "items": {
+              "$ref": "#/components/schemas/TradeShowResponse"
+            },
+            "type": "array",
+            "title": "Shows"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "page_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Size"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shows",
+          "count"
+        ],
+        "title": "ShowListResponse"
+      },
+      "SignalListResponse": {
+        "properties": {
+          "signals": {
+            "items": {
+              "$ref": "#/components/schemas/SignalResponse"
+            },
+            "type": "array",
+            "title": "Signals"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "page_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Size"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "signals",
+          "count"
+        ],
+        "title": "SignalListResponse"
+      },
+      "SignalResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "default": ""
+          },
+          "source_url": {
+            "type": "string",
+            "title": "Source Url",
+            "default": ""
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type",
+            "default": ""
+          },
+          "trade_shows": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Trade Shows"
+          },
+          "industries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Industries"
+          },
+          "regions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Regions"
+          },
+          "trend_category": {
+            "type": "string",
+            "title": "Trend Category",
+            "default": ""
+          },
+          "strength": {
+            "type": "number",
+            "title": "Strength",
+            "default": 0.0
+          },
+          "extracted_at": {
+            "type": "string",
+            "title": "Extracted At",
+            "default": ""
+          },
+          "cycle_id": {
+            "type": "string",
+            "title": "Cycle Id",
+            "default": ""
+          },
+          "media_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Media Ids"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "SignalResponse"
+      },
+      "StatsResponse": {
+        "properties": {
+          "total_signals": {
+            "type": "integer",
+            "title": "Total Signals",
+            "default": 0
+          },
+          "total_trends": {
+            "type": "integer",
+            "title": "Total Trends",
+            "default": 0
+          },
+          "total_shows": {
+            "type": "integer",
+            "title": "Total Shows",
+            "default": 0
+          },
+          "total_cycles": {
+            "type": "integer",
+            "title": "Total Cycles",
+            "default": 0
+          },
+          "total_media": {
+            "type": "integer",
+            "title": "Total Media",
+            "default": 0
+          },
+          "industries_count": {
+            "type": "integer",
+            "title": "Industries Count",
+            "default": 0
+          },
+          "regions_count": {
+            "type": "integer",
+            "title": "Regions Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "StatsResponse"
+      },
+      "TradeShowResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "short_name": {
+            "type": "string",
+            "title": "Short Name",
+            "default": ""
+          },
+          "industries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Industries"
+          },
+          "region": {
+            "type": "string",
+            "title": "Region",
+            "default": ""
+          },
+          "city": {
+            "type": "string",
+            "title": "City",
+            "default": ""
+          },
+          "country": {
+            "type": "string",
+            "title": "Country",
+            "default": ""
+          },
+          "frequency": {
+            "type": "string",
+            "title": "Frequency",
+            "default": ""
+          },
+          "tier": {
+            "type": "string",
+            "title": "Tier",
+            "default": ""
+          },
+          "typical_exhibitors": {
+            "type": "integer",
+            "title": "Typical Exhibitors",
+            "default": 0
+          },
+          "typical_attendees": {
+            "type": "integer",
+            "title": "Typical Attendees",
+            "default": 0
+          },
+          "next_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Date"
+          },
+          "website": {
+            "type": "string",
+            "title": "Website",
+            "default": ""
+          },
+          "media_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Media Ids"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "TradeShowResponse"
+      },
+      "TrendListResponse": {
+        "properties": {
+          "trends": {
+            "items": {
+              "$ref": "#/components/schemas/TrendResponse"
+            },
+            "type": "array",
+            "title": "Trends"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "page_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Size"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trends",
+          "count"
+        ],
+        "title": "TrendListResponse"
+      },
+      "TrendResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "default": ""
+          },
+          "rank": {
+            "type": "integer",
+            "title": "Rank",
+            "default": 0
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "lifecycle": {
+            "type": "string",
+            "title": "Lifecycle",
+            "default": ""
+          },
+          "composite_score": {
+            "type": "number",
+            "title": "Composite Score",
+            "default": 0.0
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence",
+            "default": 0.0
+          },
+          "industries": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Industries"
+          },
+          "regions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Regions"
+          },
+          "cross_industry": {
+            "type": "boolean",
+            "title": "Cross Industry",
+            "default": false
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": ""
+          },
+          "signal_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Signal Ids"
+          },
+          "signal_count": {
+            "type": "integer",
+            "title": "Signal Count",
+            "default": 0
+          },
+          "mention_count": {
+            "type": "integer",
+            "title": "Mention Count",
+            "default": 0
+          },
+          "show_count": {
+            "type": "integer",
+            "title": "Show Count",
+            "default": 0
+          },
+          "keywords": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keywords"
+          },
+          "velocity": {
+            "type": "number",
+            "title": "Velocity",
+            "default": 0.0
+          },
+          "prediction": {
+            "type": "string",
+            "title": "Prediction",
+            "default": ""
+          },
+          "design_implications": {
+            "type": "string",
+            "title": "Design Implications",
+            "default": ""
+          },
+          "cycle_id": {
+            "type": "string",
+            "title": "Cycle Id",
+            "default": ""
+          },
+          "media_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Media Ids"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "TrendResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
