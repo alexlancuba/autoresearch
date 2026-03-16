@@ -391,6 +391,64 @@
   .history-item .time { color: var(--text-muted); font-size: 12px; }
   .history-item .detail { flex: 1; margin-left: 12px; }
 
+  /* --- Health Monitor --- */
+  .health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .health-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .health-card .health-value {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .health-card .health-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+  }
+  .health-status-healthy { color: var(--green); }
+  .health-status-degraded { color: var(--orange); }
+  .health-status-unhealthy { color: var(--red); }
+  .health-status-starting { color: var(--blue); }
+
+  /* --- SME Briefing --- */
+  .briefing-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    max-height: 600px;
+    overflow-y: auto;
+  }
+  .briefing-content h2 { color: var(--accent-light); margin: 16px 0 8px 0; font-size: 16px; }
+  .briefing-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+  .briefing-controls select {
+    padding: 8px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+  }
+
   /* --- Loading spinner --- */
   .spinner {
     display: inline-block;
@@ -496,6 +554,8 @@
       <button class="tab" data-tab="regions" onclick="switchTab('regions')">Regions</button>
       <button class="tab" data-tab="opportunities" onclick="switchTab('opportunities')">Opportunities</button>
       <button class="tab" data-tab="shows" onclick="switchTab('shows')">Trade Shows</button>
+      <button class="tab" data-tab="monitor" onclick="switchTab('monitor')">Monitor</button>
+      <button class="tab" data-tab="briefing" onclick="switchTab('briefing')">SME Briefing</button>
     </div>
 
     <!-- Tab: Trends -->
@@ -545,6 +605,45 @@
     <!-- Tab: Shows -->
     <div id="tab-shows" class="tab-content">
       <div id="showsContent"></div>
+    </div>
+
+    <!-- Tab: Monitor -->
+    <div id="tab-monitor" class="tab-content">
+      <h2 style="margin-bottom:16px;font-size:18px;">Agent Health Monitor</h2>
+      <div id="healthGrid" class="health-grid">
+        <div class="empty-state">
+          <p>Loading health data...</p>
+        </div>
+      </div>
+      <h3 style="margin:20px 0 12px;font-size:15px;color:var(--text-muted);">Recent Errors</h3>
+      <div id="healthErrors" style="font-size:13px;color:var(--text-muted);">No errors</div>
+    </div>
+
+    <!-- Tab: SME Briefing -->
+    <div id="tab-briefing" class="tab-content">
+      <h2 style="margin-bottom:16px;font-size:18px;">Sales Rep SME Briefing</h2>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+        AI-generated briefing to help sales reps and designers position as subject matter experts.
+        Requires ANTHROPIC_API_KEY and at least one completed analysis.
+      </p>
+      <div class="briefing-controls">
+        <select id="briefingIndustry">
+          <option value="">All Industries</option>
+        </select>
+        <select id="briefingRegion">
+          <option value="">All Regions</option>
+        </select>
+        <button class="btn btn-primary" style="width:auto;padding:8px 20px;" onclick="generateBriefing()">
+          Generate Briefing
+        </button>
+      </div>
+      <div id="briefingContent" class="briefing-content">
+        <div class="empty-state">
+          <div class="icon" style="font-size:36px;">&#x1F4DD;</div>
+          <h2>No Briefing Generated</h2>
+          <p>Select filters and click "Generate Briefing" to create an SME-ready document for your sales team.</p>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -781,6 +880,127 @@ function renderOpportunities(opps) {
     html += `<div class="opportunity-item">${o}</div>`;
   });
   document.getElementById('opportunitiesContent').innerHTML = html;
+}
+
+// --- Health Monitor ---
+async function loadHealth() {
+  try {
+    const health = await fetch(`${API}/api/health`).then(r => r.json());
+    const statusClass = `health-status-${health.status}`;
+    let html = `
+      <div class="health-card">
+        <div class="health-value ${statusClass}">${health.status.toUpperCase()}</div>
+        <div class="health-label">Status</div>
+      </div>
+      <div class="health-card">
+        <div class="health-value">${health.uptime_human || '0s'}</div>
+        <div class="health-label">Uptime</div>
+      </div>
+      <div class="health-card">
+        <div class="health-value">${health.data_freshness_human || 'N/A'}</div>
+        <div class="health-label">Data Freshness</div>
+      </div>
+      <div class="health-card">
+        <div class="health-value">${health.total_cycles || 0}</div>
+        <div class="health-label">Total Cycles</div>
+      </div>
+      <div class="health-card">
+        <div class="health-value">${health.total_signals || 0}</div>
+        <div class="health-label">Total Signals</div>
+      </div>
+      <div class="health-card">
+        <div class="health-value">${health.last_cycle_duration_seconds || 0}s</div>
+        <div class="health-label">Last Cycle Duration</div>
+      </div>
+      <div class="health-card">
+        <div class="health-value">${health.ai_extraction_enabled ? 'ON' : 'OFF'}</div>
+        <div class="health-label">AI Extraction</div>
+      </div>
+      <div class="health-card">
+        <div class="health-value">${health.notifications_enabled ? 'ON' : 'OFF'}</div>
+        <div class="health-label">Notifications</div>
+      </div>
+      <div class="health-card">
+        <div class="health-value" style="color:${health.errors_last_hour > 0 ? 'var(--red)' : 'var(--green)'}">${health.errors_last_hour}</div>
+        <div class="health-label">Errors (1h)</div>
+      </div>
+    `;
+    if (health.next_cycle_at) {
+      html += `<div class="health-card">
+        <div class="health-value" style="font-size:14px;">${health.next_cycle_at.split('T')[1]?.substring(0,5) || ''}</div>
+        <div class="health-label">Next Cycle</div>
+      </div>`;
+    }
+    document.getElementById('healthGrid').innerHTML = html;
+
+    // Show last error if any
+    if (health.last_error) {
+      document.getElementById('healthErrors').innerHTML =
+        `<div style="background:var(--surface);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:12px;color:var(--red);">${health.last_error}</div>`;
+    } else {
+      document.getElementById('healthErrors').textContent = 'No errors';
+    }
+  } catch(e) { /* server not ready */ }
+}
+
+// Load health data periodically
+setInterval(loadHealth, 5000);
+setTimeout(loadHealth, 500);
+
+// --- SME Briefing ---
+// Populate briefing dropdowns from main dropdowns
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const mainInd = document.getElementById('selIndustry');
+    const briefInd = document.getElementById('briefingIndustry');
+    const mainReg = document.getElementById('selRegion');
+    const briefReg = document.getElementById('briefingRegion');
+    if (mainInd && briefInd) {
+      Array.from(mainInd.options).forEach(opt => {
+        if (opt.value) {
+          const o = document.createElement('option');
+          o.value = opt.value; o.textContent = opt.textContent;
+          briefInd.appendChild(o);
+        }
+      });
+    }
+    if (mainReg && briefReg) {
+      Array.from(mainReg.options).forEach(opt => {
+        if (opt.value) {
+          const o = document.createElement('option');
+          o.value = opt.value; o.textContent = opt.textContent;
+          briefReg.appendChild(o);
+        }
+      });
+    }
+  }, 2000);
+});
+
+async function generateBriefing() {
+  const industry = document.getElementById('briefingIndustry').value;
+  const region = document.getElementById('briefingRegion').value;
+  const el = document.getElementById('briefingContent');
+  el.innerHTML = '<div style="text-align:center;padding:40px;"><span class="spinner"></span> Generating SME briefing with AI...</div>';
+
+  try {
+    let url = `${API}/api/briefing?`;
+    if (industry) url += `industry=${encodeURIComponent(industry)}&`;
+    if (region) url += `region=${encodeURIComponent(region)}&`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+    if (data.briefing) {
+      // Simple markdown-ish rendering
+      let text = data.briefing
+        .replace(/## (.*)/g, '<h2>$1</h2>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n- /g, '\n&#8226; ');
+      el.innerHTML = text;
+    } else {
+      el.innerHTML = `<div class="empty-state"><p>${data.error || 'No briefing generated. Run an analysis first and ensure ANTHROPIC_API_KEY is set.'}</p></div>`;
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state"><p>Failed to generate briefing: ${e}</p></div>`;
+  }
 }
 </script>
 </body>

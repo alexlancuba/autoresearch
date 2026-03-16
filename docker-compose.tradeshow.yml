@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  tradeshow-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.tradeshow
+    container_name: tradeshow-trend-agent
+    restart: always  # Auto-restart on crash, reboot, or failure
+    ports:
+      - "8050:8050"
+    environment:
+      # --- Claude AI (required for AI-powered extraction) ---
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+
+      # --- Slack Notifications (optional) ---
+      - TRADESHOW_SLACK_WEBHOOK=${TRADESHOW_SLACK_WEBHOOK:-}
+
+      # --- Email Notifications (optional) ---
+      - TRADESHOW_SMTP_HOST=${TRADESHOW_SMTP_HOST:-}
+      - TRADESHOW_SMTP_USER=${TRADESHOW_SMTP_USER:-}
+      - TRADESHOW_SMTP_PASSWORD=${TRADESHOW_SMTP_PASSWORD:-}
+      - TRADESHOW_EMAIL_FROM=${TRADESHOW_EMAIL_FROM:-}
+      - TRADESHOW_EMAIL_TO=${TRADESHOW_EMAIL_TO:-}
+
+      # --- Generic Webhook (optional) ---
+      - TRADESHOW_WEBHOOK_URL=${TRADESHOW_WEBHOOK_URL:-}
+
+    volumes:
+      # Persist cache and reports across restarts
+      - tradeshow-cache:/root/.cache/autoresearch/tradeshow
+      - tradeshow-reports:/app/tradeshow_reports
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8050/api/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  tradeshow-cache:
+  tradeshow-reports:

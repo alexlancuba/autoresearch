@@ -8,14 +8,18 @@ gathering data, analyzing trends, and producing actionable reports.
 """
 
 import argparse
+import json
 import logging
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
 
+from .ai_researcher import AIResearchConfig, AITrendExtractor
 from .analyzer import TrendAnalyzer
 from .config import AgentConfig, INDUSTRIES, REGIONS
+from .monitor import AgentMonitor
+from .notifications import NotificationConfig, NotificationManager
 from .reports import ReportGenerator, print_report_summary
 from .researcher import TradeShowResearcher, TrendSignal
 
@@ -35,17 +39,34 @@ class TradeShowAgent:
 
     The agent runs in a continuous loop:
     1. Research trade shows across configured industries and regions
-    2. Extract trend signals from web sources
+    2. Extract trend signals from web sources (AI-powered or keyword-based)
     3. Analyze and aggregate trends
     4. Generate reports with insights
-    5. Sleep, then repeat
+    5. Send notifications to configured channels
+    6. Sleep, then repeat
     """
 
-    def __init__(self, config: AgentConfig | None = None):
+    def __init__(self, config: AgentConfig | None = None,
+                 ai_config: AIResearchConfig | None = None,
+                 notification_config: NotificationConfig | None = None):
         self.config = config or AgentConfig()
-        self.researcher = TradeShowResearcher(self.config)
+
+        # AI-powered extraction
+        self.ai_extractor = AITrendExtractor(ai_config or AIResearchConfig())
+
+        # Pass AI extractor to researcher
+        self.researcher = TradeShowResearcher(self.config, ai_extractor=self.ai_extractor)
         self.analyzer = TrendAnalyzer(top_n=self.config.top_trends_count)
         self.reporter = ReportGenerator(self.config.reports_dir)
+
+        # Monitoring
+        self.monitor = AgentMonitor()
+        self.monitor.set_ai_enabled(self.ai_extractor.is_enabled)
+
+        # Notifications
+        self.notifier = NotificationManager(notification_config or NotificationConfig())
+        self.monitor.set_notifications_enabled(self.notifier.is_enabled)
+
         self.cycle_count = 0
         self.all_signals: list[TrendSignal] = []
 
@@ -63,6 +84,7 @@ class TradeShowAgent:
             Path to the generated report file.
         """
         self.cycle_count += 1
+        self.monitor.record_cycle_start()
         cycle_start = time.time()
         logger.info(f"=== Starting research cycle {self.cycle_count} ===")
 
@@ -83,6 +105,7 @@ class TradeShowAgent:
                 logger.info(f"  {industry}: {len(signals)} signals")
             except Exception as e:
                 logger.error(f"  {industry}: research failed - {e}")
+                self.monitor.record_error(f"Industry research failed: {industry} - {e}")
 
         # Research by region (catches shows not industry-filtered)
         for region in target_regions:
@@ -92,6 +115,7 @@ class TradeShowAgent:
                 logger.info(f"  {region}: {len(signals)} signals")
             except Exception as e:
                 logger.error(f"  {region}: research failed - {e}")
+                self.monitor.record_error(f"Region research failed: {region} - {e}")
 
         # Deduplicate signals
         cycle_signals = self._deduplicate_signals(cycle_signals)
@@ -107,12 +131,29 @@ class TradeShowAgent:
         logger.info(f"Phase 3: Generating {output_format} report")
         report_path = self.reporter.generate(report, fmt=output_format)
 
+        # Also generate JSON for API/notifications
+        json_report_path = self.reporter.generate(report, fmt="json")
+
         # Print summary
         print_report_summary(report)
 
         # Cache data
         events = self.researcher.get_seed_events()
         self.researcher.save_cache(events, self.all_signals)
+
+        # Record monitoring metrics
+        self.monitor.record_cycle_complete(len(cycle_signals))
+
+        # Send notifications
+        try:
+            json_data = json.loads(json_report_path.read_text())
+            self.notifier.notify_report_ready(json_data)
+
+            # Notify on high-scoring new trends
+            for trend in json_data.get("global_trends", [])[:3]:
+                self.notifier.notify_new_high_score_trend(trend)
+        except Exception as e:
+            logger.warning(f"Notification failed: {e}")
 
         elapsed = time.time() - cycle_start
         logger.info(f"=== Cycle {self.cycle_count} complete in {elapsed:.1f}s ===")
@@ -132,10 +173,22 @@ class TradeShowAgent:
             output_format: Report format for each cycle.
         """
         interval = interval_minutes or self.config.research_interval_minutes
+        self.monitor.set_interval(interval)
         logger.info(f"Starting continuous mode (interval: {interval} min)")
         logger.info(f"Industries: {len(self.config.industries)}")
         logger.info(f"Regions: {len(self.config.regions)}")
+        logger.info(f"AI Extraction: {'Enabled' if self.ai_extractor.is_enabled else 'Disabled'}")
+        logger.info(f"Notifications: {'Enabled' if self.notifier.is_enabled else 'Disabled'}")
         logger.info("Press Ctrl+C to stop.")
+
+        # Notify agent started
+        self.notifier.notify_agent_started({
+            "industries": len(self.config.industries),
+            "regions": len(self.config.regions),
+            "seed_shows": len(self.researcher.get_seed_events()),
+            "interval_minutes": interval,
+            "ai_enabled": self.ai_extractor.is_enabled,
+        })
 
         while True:
             try:
@@ -147,6 +200,8 @@ class TradeShowAgent:
                 break
             except Exception as e:
                 logger.error(f"Cycle failed: {e}", exc_info=True)
+                self.monitor.record_error(str(e))
+                self.notifier.notify_error(str(e), context="research_cycle")
                 logger.info(f"Retrying in {interval} minutes...")
                 time.sleep(interval * 60)
 
@@ -218,14 +273,28 @@ class TradeShowAgent:
         return unique
 
     def get_status(self) -> dict:
-        """Return the agent's current status."""
+        """Return the agent's current status including health info."""
+        health = self.monitor.get_health()
         return {
             "cycles_completed": self.cycle_count,
             "total_signals": len(self.all_signals),
             "industries_tracked": len(self.config.industries),
             "regions_tracked": len(self.config.regions),
             "seed_events": len(self.researcher.get_seed_events()),
+            "ai_extraction": self.ai_extractor.is_enabled,
+            "notifications": self.notifier.is_enabled,
+            "health": health.to_dict(),
         }
+
+    def generate_sme_briefing(self, industry: str = "",
+                               region: str = "") -> str:
+        """Generate an SME briefing for sales reps using AI.
+
+        Returns empty string if AI extraction is not enabled.
+        """
+        return self.ai_extractor.generate_sme_briefing(
+            self.all_signals, industry=industry, region=region
+        )
 
 
 def main():
@@ -236,25 +305,28 @@ def main():
         epilog="""
 Examples:
   # Run a single analysis cycle across all industries/regions
-  python -m tradeshow_agent.agent
+  python -m tradeshow_agent
 
   # Run continuous monitoring (every 30 minutes)
-  python -m tradeshow_agent.agent --continuous
+  python -m tradeshow_agent --continuous
+
+  # Run continuous + web dashboard
+  python -m tradeshow_agent --continuous --ui
 
   # Focus on a specific industry
-  python -m tradeshow_agent.agent --industry "Technology & Electronics"
+  python -m tradeshow_agent --industry "Technology & Electronics"
 
   # Focus on a specific region
-  python -m tradeshow_agent.agent --region "Asia-Pacific"
+  python -m tradeshow_agent --region "Asia-Pacific"
 
   # Research a specific trade show
-  python -m tradeshow_agent.agent --show "CES"
+  python -m tradeshow_agent --show "CES"
 
   # Generate HTML report
-  python -m tradeshow_agent.agent --format html
+  python -m tradeshow_agent --format html
 
   # Custom interval for continuous mode
-  python -m tradeshow_agent.agent --continuous --interval 60
+  python -m tradeshow_agent --continuous --interval 60
         """,
     )
 
@@ -308,7 +380,7 @@ Examples:
         return
 
     # Web dashboard
-    if args.ui:
+    if args.ui and not args.continuous:
         from .server import run_server
         run_server(port=args.port)
         return
@@ -316,6 +388,11 @@ Examples:
     # Configure and run
     config = AgentConfig(reports_dir=Path(args.reports_dir))
     agent = TradeShowAgent(config=config)
+
+    # If --ui and --continuous, start server in background then run continuous
+    if args.ui and args.continuous:
+        from .server import run_server_background
+        run_server_background(port=args.port, agent=agent)
 
     if args.show or args.industry or args.region:
         # Focused analysis

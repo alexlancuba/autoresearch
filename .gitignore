@@ -25,3 +25,6 @@ results.tsv
 # Trade show agent outputs
 tradeshow_reports/
 tradeshow_agent.log
+
+# Environment files (secrets)
+.env

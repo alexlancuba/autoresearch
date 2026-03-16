@@ -66,28 +66,9 @@ class TradeShowResearcher:
         "biggest {industry} exhibitions {year} global",
     ]
 
-    # Trend extraction prompts
-    TREND_EXTRACTION_PROMPT = """Analyze the following content about trade shows and exhibitions.
-Extract key trend signals including:
-1. Emerging technologies or products being showcased
-2. Shifts in industry focus or themes
-3. New market entrants or notable exhibitors
-4. Geographic expansion of trade shows
-5. Attendance and engagement patterns
-6. Cross-industry convergence themes
-
-For each trend, provide:
-- title: short name for the trend
-- description: 2-3 sentence explanation
-- signal_type: one of "emerging", "growing", "mature", "declining"
-- confidence: 0.0-1.0 confidence score
-- keywords: relevant keywords
-- related_companies: companies associated with this trend
-
-Return as JSON array of trend objects."""
-
-    def __init__(self, config: AgentConfig):
+    def __init__(self, config: AgentConfig, ai_extractor=None):
         self.config = config
+        self.ai_extractor = ai_extractor
         self.session = requests.Session()
         self.session.headers.update({
             "User-Agent": "AutoResearch-TradeShowAgent/0.1 (Research Bot)"
@@ -255,7 +236,16 @@ Return as JSON array of trend objects."""
             time.sleep(1)  # Rate limiting
 
         # Extract trends from gathered content
+        # Try AI extraction first, fall back to keyword-based
         for item in all_content:
+            if self.ai_extractor and self.ai_extractor.is_enabled:
+                extracted = self.ai_extractor.extract_trends(
+                    item["content"], show=show, source_url=item["source"],
+                )
+                if extracted:
+                    signals.extend(extracted)
+                    continue
+            # Fallback: keyword-based extraction
             extracted = self._extract_trends_from_content(
                 item["content"],
                 show=show,
