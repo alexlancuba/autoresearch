@@ -70,9 +70,28 @@ export interface Stats {
   total_regions: number;
 }
 
+export interface MediaAsset {
+  id: string;
+  url: string;
+  thumbnail_url: string;
+  media_type: "photo" | "video" | "thumbnail" | "floor_plan" | "render";
+  source: string;
+  source_url: string;
+  caption: string;
+  trade_shows: string[];
+  industries: string[];
+  trend_categories: string[];
+  tags: string[];
+  width: number;
+  height: number;
+  fetched_at: string;
+  cycle_id: string;
+}
+
 export type TabId =
   | "top-trends"
   | "industries"
   | "regions"
   | "opportunities"
-  | "trade-shows";
+  | "trade-shows"
+  | "visuals";

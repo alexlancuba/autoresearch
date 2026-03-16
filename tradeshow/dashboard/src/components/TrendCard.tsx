@@ -1,4 +1,7 @@
-import type { Trend } from "../types";
+import { useState, useEffect } from "react";
+import type { Trend, MediaAsset } from "../types";
+import { api } from "../api";
+import { MediaCarousel } from "./MediaCarousel";
 
 function scoreClass(score: number): string {
   if (score >= 40) return "score-high";
@@ -7,6 +10,12 @@ function scoreClass(score: number): string {
 }
 
 export function TrendCard({ trend }: { trend: Trend }) {
+  const [media, setMedia] = useState<MediaAsset[]>([]);
+
+  useEffect(() => {
+    api.getTrendMedia(trend.id).then(setMedia).catch(() => {});
+  }, [trend.id]);
+
   return (
     <div className="trend-card">
       <div className="trend-card-header">
@@ -41,6 +50,8 @@ export function TrendCard({ trend }: { trend: Trend }) {
       </div>
 
       <div className="trend-description">{trend.description}</div>
+
+      {media.length > 0 && <MediaCarousel media={media} />}
 
       <div className="trend-meta">
         <div className="trend-meta-left">

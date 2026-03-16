@@ -1,4 +1,4 @@
-import type { Trend, Signal, TradeShow, AnalysisCycle, Stats } from "./types";
+import type { Trend, Signal, TradeShow, AnalysisCycle, Stats, MediaAsset } from "./types";
 
 const API_BASE = "/api";
 
@@ -64,6 +64,39 @@ export const api = {
       total_industries: data.industries_count ?? 0,
       total_regions: data.regions_count ?? 0,
     };
+  },
+
+  getMedia: async (tradeShow?: string, trendCategory?: string): Promise<MediaAsset[]> => {
+    const data = await fetchJSON<{ media: MediaAsset[]; count: number }>(
+      `${API_BASE}/media`,
+      { trade_show: tradeShow || "", trend_category: trendCategory || "" }
+    );
+    return data.media;
+  },
+
+  getTrendMedia: async (trendId: string): Promise<MediaAsset[]> => {
+    const data = await fetchJSON<{ media: MediaAsset[]; count: number }>(
+      `${API_BASE}/trends/${trendId}/media`
+    );
+    return data.media;
+  },
+
+  getShowMedia: async (showId: string): Promise<MediaAsset[]> => {
+    const data = await fetchJSON<{ media: MediaAsset[]; count: number }>(
+      `${API_BASE}/shows/${showId}/media`
+    );
+    return data.media;
+  },
+
+  triggerScrape: (offline = true, maxResults = 50) =>
+    fetch(`${API_BASE}/scrape`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ offline, max_results: maxResults }),
+    }).then((r) => r.json()),
+
+  getScrapeStatus: async () => {
+    return fetchJSON<{ running: boolean; last_result: unknown }>(`${API_BASE}/scrape/status`);
   },
 
   runAnalysis: (scope: string, industry?: string, region?: string, show?: string) =>

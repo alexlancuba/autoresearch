@@ -70,6 +70,14 @@ class SignalSourceType(str, Enum):
     INDUSTRY_PUBLICATION = "industry_publication"
 
 
+class MediaType(str, Enum):
+    PHOTO = "photo"
+    VIDEO = "video"
+    THUMBNAIL = "thumbnail"
+    FLOOR_PLAN = "floor_plan"
+    RENDER = "render"
+
+
 # ── Data Models ──────────────────────────────────────────────────────────────
 
 
@@ -89,6 +97,7 @@ class TradeShow:
     typical_attendees: int = 0
     next_date: Optional[str] = None  # ISO date
     website: str = ""
+    media_ids: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -105,6 +114,7 @@ class TradeShow:
             "typical_attendees": self.typical_attendees,
             "next_date": self.next_date,
             "website": self.website,
+            "media_ids": self.media_ids,
         }
 
 
@@ -122,6 +132,7 @@ class Signal:
     strength: float = 0.0  # 0-1
     extracted_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     cycle_id: str = ""
+    media_ids: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -136,6 +147,7 @@ class Signal:
             "strength": self.strength,
             "extracted_at": self.extracted_at,
             "cycle_id": self.cycle_id,
+            "media_ids": self.media_ids,
         }
 
 
@@ -162,6 +174,7 @@ class Trend:
     prediction: str = ""
     design_implications: str = ""
     cycle_id: str = ""
+    media_ids: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -185,6 +198,7 @@ class Trend:
             "prediction": self.prediction,
             "design_implications": self.design_implications,
             "cycle_id": self.cycle_id,
+            "media_ids": self.media_ids,
         }
 
 
@@ -235,3 +249,42 @@ class Experiment:
             f"{self.metric_before:.4f}\t{self.metric_after:.4f}\t"
             f"{'kept' if self.kept else 'discarded'}"
         )
+
+
+@dataclass
+class MediaAsset:
+    """A visual media asset (photo, video, thumbnail) collected from sources."""
+    id: str = field(default_factory=lambda: str(uuid.uuid4())[:12])
+    url: str = ""
+    thumbnail_url: str = ""
+    media_type: MediaType = MediaType.PHOTO
+    source: str = ""  # "youtube", "instagram", "official_gallery"
+    source_url: str = ""  # page where found
+    caption: str = ""
+    trade_shows: list[str] = field(default_factory=list)
+    industries: list[str] = field(default_factory=list)
+    trend_categories: list[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
+    width: int = 0
+    height: int = 0
+    fetched_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    cycle_id: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "url": self.url,
+            "thumbnail_url": self.thumbnail_url,
+            "media_type": self.media_type.value,
+            "source": self.source,
+            "source_url": self.source_url,
+            "caption": self.caption,
+            "trade_shows": self.trade_shows,
+            "industries": self.industries,
+            "trend_categories": self.trend_categories,
+            "tags": self.tags,
+            "width": self.width,
+            "height": self.height,
+            "fetched_at": self.fetched_at,
+            "cycle_id": self.cycle_id,
+        }

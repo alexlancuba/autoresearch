@@ -1,0 +1,77 @@
+# Trade Show Trend Analysis — Scraping Configuration
+# ─────────────────────────────────────────────────
+
+scraping:
+  enabled: true
+
+  # Schedule intervals for automated collection
+  schedule:
+    rss_interval_hours: 6
+    youtube_interval_hours: 24
+    social_interval_hours: 4
+    web_interval_hours: 12
+
+  # Rate limiting (seconds between requests per domain)
+  rate_limits:
+    default_delay_seconds: 2
+    per_domain:
+      youtube.com: 1
+      instagram.com: 5
+      twitter.com: 3
+      news.google.com: 1
+
+  # API keys (set via environment variables)
+  api_keys:
+    youtube: ${YOUTUBE_API_KEY}
+    twitter: ${TWITTER_BEARER_TOKEN}
+    anthropic: ${ANTHROPIC_API_KEY}
+
+  # RSS feeds to monitor
+  rss_feeds:
+    - url: "https://www.tsnn.com/rss"
+      name: "TSNN"
+      source_type: "media_coverage"
+    - url: "https://www.eventmarketer.com/feed/"
+      name: "EventMarketer"
+      source_type: "media_coverage"
+    - url: "https://www.exhibitoronline.com/rss/rss.asp"
+      name: "Exhibitor Magazine"
+      source_type: "industry_publication"
+
+  # Google News search queries
+  search_queries:
+    - "trade show trends 2026"
+    - "trade show booth design trends"
+    - "exhibit design innovation"
+    - "trade show technology 2026"
+    - "CES 2026 exhibitors booth"
+    - "Hannover Messe 2026 trends"
+    - "MEDICA trade show 2026"
+    - "NRF retail technology booth"
+    - "trade show sustainability exhibit"
+    - "trade show AI automation booth"
+    - "GITEX 2026 technology"
+    - "MWC 2026 booth"
+    - "exhibitor booth experience design"
+    - "trade show floor plan trends"
+    - "immersive exhibit experience"
+
+  # YouTube search query templates
+  youtube_queries:
+    - '"{show}" booth tour {year}'
+    - '"{show}" walkthrough {year}'
+    - '"{show}" exhibit highlights {year}'
+    - '"{show}" best booths {year}'
+
+# Media storage configuration
+media:
+  storage: "url_only"  # "url_only" or "download"
+  cache_dir: "data/media_cache"
+  max_media_per_trend: 20
+  max_media_per_show: 50
+
+# LLM extraction configuration
+extraction:
+  model: "claude-sonnet-4-20250514"
+  max_tokens: 2000
+  batch_size: 10  # articles per LLM batch

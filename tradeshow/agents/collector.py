@@ -257,6 +257,48 @@ class SignalCollector:
         score = 0.45 * source_w + 0.25 * text_score + 0.30 * recency_score
         return round(min(max(score, 0.0), 1.0), 4)
 
+    async def scan_live(
+        self,
+        offline: bool = False,
+        max_results: int = 50,
+        scope: str = "Full Scan",
+    ) -> list[dict]:
+        """Run live scrapers to collect real signals from the web.
+
+        This extends the seed-data ``scan()`` by fetching real articles from
+        RSS feeds, YouTube, and web sources, then extracting structured signals.
+
+        Parameters
+        ----------
+        offline : bool
+            Use keyword extraction instead of LLM.
+        max_results : int
+            Max articles per scraper source.
+        scope : str
+            Scope label for the resulting cycle.
+
+        Returns
+        -------
+        list[dict]
+            All signals (seed + newly scraped), deduplicated.
+        """
+        from tradeshow.scrapers.run import run_scrape
+        import asyncio
+
+        summary = await run_scrape(offline=offline, max_results=max_results)
+
+        # Reload combined signals from disk
+        combined = self._load_seed_signals()
+
+        # Apply taxonomy filter
+        combined = [
+            s for s in combined
+            if s.get("trend_category", "") in self.signal_taxonomy
+        ]
+
+        self._total_signals_emitted += len(combined)
+        return combined
+
     # ── Config interface (what the agent can modify) ────────────────────────
 
     def get_config(self) -> dict:

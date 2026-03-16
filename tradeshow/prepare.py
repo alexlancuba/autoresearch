@@ -137,6 +137,31 @@ def load_trends(
     return sorted(trends, key=lambda t: t.get("rank", 999))
 
 
+def load_media(
+    trade_show: Optional[str] = None,
+    trend_category: Optional[str] = None,
+    media_type: Optional[str] = None,
+) -> list[dict]:
+    """Load media assets, optionally filtered.
+
+    Args:
+        trade_show: Filter by trade show short name.
+        trend_category: Filter by trend category.
+        media_type: Filter by media type (photo, video, thumbnail, etc.).
+
+    Returns:
+        List of media asset dicts.
+    """
+    media = _load_json("media.json")
+    if trade_show:
+        media = [m for m in media if trade_show in m.get("trade_shows", [])]
+    if trend_category:
+        media = [m for m in media if trend_category in m.get("trend_categories", [])]
+    if media_type:
+        media = [m for m in media if m.get("media_type") == media_type]
+    return media
+
+
 def load_cycles() -> list[dict]:
     """Load analysis cycle history (run history).
 

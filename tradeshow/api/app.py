@@ -37,6 +37,7 @@ _data: dict[str, list[dict]] = {
     "signals": [],
     "shows": [],
     "cycles": [],
+    "media": [],
 }
 
 
@@ -61,6 +62,7 @@ def _reload_data() -> None:
     _data["signals"] = _load_json("signals.json")
     _data["shows"] = _load_json("shows.json")
     _data["cycles"] = _load_json("cycles.json")
+    _data["media"] = _load_json("media.json")
 
 
 @app.on_event("startup")
@@ -260,4 +262,103 @@ def run_analysis(request: AnalyzeRequest):
         "cycle": cycle,
         "trends": trends,
         "signal_count": len(signals),
+    }
+
+
+# ── Media endpoints ──────────────────────────────────────────────────────────
+
+
+@app.get("/api/media")
+def list_media(
+    trade_show: Optional[str] = Query(None),
+    trend_category: Optional[str] = Query(None),
+    media_type: Optional[str] = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+):
+    results = _data["media"]
+    if trade_show:
+        results = [m for m in results if trade_show in m.get("trade_shows", [])]
+    if trend_category:
+        results = [m for m in results if trend_category in m.get("trend_categories", [])]
+    if media_type:
+        results = [m for m in results if m.get("media_type") == media_type]
+    return {"media": results[:limit], "count": len(results)}
+
+
+@app.get("/api/trends/{trend_id}/media")
+def get_trend_media(trend_id: str):
+    trend = None
+    for t in _data["trends"]:
+        if t.get("id") == trend_id:
+            trend = t
+            break
+    if not trend:
+        raise HTTPException(status_code=404, detail=f"Trend '{trend_id}' not found")
+
+    # Get media by trend's media_ids or by trend_category match
+    media_ids = set(trend.get("media_ids", []))
+    trend_name = trend.get("name", "")
+    results = [
+        m for m in _data["media"]
+        if m.get("id") in media_ids or trend_name in m.get("trend_categories", [])
+    ]
+    return {"media": results, "count": len(results)}
+
+
+@app.get("/api/shows/{show_id}/media")
+def get_show_media(show_id: str):
+    show = None
+    for s in _data["shows"]:
+        if s.get("id") == show_id:
+            show = s
+            break
+    if not show:
+        raise HTTPException(status_code=404, detail=f"Show '{show_id}' not found")
+
+    short_name = show.get("short_name", "")
+    results = [
+        m for m in _data["media"]
+        if short_name in m.get("trade_shows", [])
+    ]
+    return {"media": results, "count": len(results)}
+
+
+class ScrapeRequest(BaseModel):
+    offline: bool = True
+    max_results: int = 50
+    scope: str = "Full Scan"
+
+
+# Track scrape status
+_scrape_status: dict = {"running": False, "last_result": None}
+
+
+@app.post("/api/scrape")
+async def trigger_scrape(request: ScrapeRequest):
+    """Trigger a data collection cycle."""
+    if _scrape_status["running"]:
+        return {"status": "already_running", "message": "A scrape is already in progress"}
+
+    _scrape_status["running"] = True
+    try:
+        from tradeshow.scrapers.pipeline import run_pipeline
+        result = await run_pipeline(
+            offline=request.offline,
+            max_results=request.max_results,
+            scope=request.scope,
+        )
+        _scrape_status["last_result"] = result
+        _reload_data()
+        return {"status": "complete", "result": result}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+    finally:
+        _scrape_status["running"] = False
+
+
+@app.get("/api/scrape/status")
+def scrape_status():
+    return {
+        "running": _scrape_status["running"],
+        "last_result": _scrape_status["last_result"],
     }

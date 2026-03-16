@@ -7,6 +7,7 @@ import { IndustriesPanel } from "./components/IndustriesPanel";
 import { RegionsPanel } from "./components/RegionsPanel";
 import { OpportunitiesPanel } from "./components/OpportunitiesPanel";
 import { TradeShowsPanel } from "./components/TradeShowsPanel";
+import { VisualBoardPanel } from "./components/VisualBoardPanel";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "top-trends", label: "Top Trends" },
@@ -14,6 +15,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "regions", label: "Regions" },
   { id: "opportunities", label: "Opportunities" },
   { id: "trade-shows", label: "Trade Shows" },
+  { id: "visuals", label: "Visuals" },
 ];
 
 export default function App() {
@@ -133,6 +135,9 @@ export default function App() {
             )}
             {activeTab === "trade-shows" && (
               <TradeShowsPanel shows={shows} />
+            )}
+            {activeTab === "visuals" && (
+              <VisualBoardPanel />
             )}
           </div>
         )}
