@@ -1,0 +1,41 @@
+[
+  {
+    "id": "cycle-001",
+    "timestamp": "2026-03-16T14:32:00Z",
+    "scan_type": "full",
+    "scope": "Full Scan",
+    "signal_count": 47,
+    "trend_count": 10,
+    "industries_covered": 15,
+    "regions_covered": 5,
+    "model_version": "v1.0",
+    "predictions": [],
+    "eval_score": null
+  },
+  {
+    "id": "cycle-002",
+    "timestamp": "2026-03-16T14:01:00Z",
+    "scan_type": "regional",
+    "scope": "Asia-Pacific",
+    "signal_count": 18,
+    "trend_count": 7,
+    "industries_covered": 10,
+    "regions_covered": 1,
+    "model_version": "v1.0",
+    "predictions": [],
+    "eval_score": null
+  },
+  {
+    "id": "cycle-003",
+    "timestamp": "2026-03-16T13:30:00Z",
+    "scan_type": "show_specific",
+    "scope": "CES 2026",
+    "signal_count": 12,
+    "trend_count": 5,
+    "industries_covered": 6,
+    "regions_covered": 3,
+    "model_version": "v1.0",
+    "predictions": [],
+    "eval_score": null
+  }
+]
